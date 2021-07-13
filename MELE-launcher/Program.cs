@@ -45,6 +45,8 @@ namespace MELE_launcher
                  me1game.StartInfo.Arguments = $"-NoHomeDir -SeekFreeLoadingPCConsole -locale locale -OVERRIDELANGUAGE={locale} -Subtitles 20 -NOFORCEFEEDBACK -TELEMOPTIN 0";
             
                  me1game.Start();
+
+                 Console.ReadLine();
             
                 
 			}
@@ -62,6 +64,8 @@ namespace MELE_launcher
                  me2game.StartInfo.Arguments = $"-NoHomeDir -SeekFreeLoadingPCConsole -locale locale -OVERRIDELANGUAGE={locale} -Subtitles 20 -NOFORCEFEEDBACK -TELEMOPTIN 0";
             
                  me2game.Start();
+
+                 Console.ReadLine();
             
                 
 			}
@@ -79,6 +83,8 @@ namespace MELE_launcher
                  me3game.StartInfo.Arguments = $"-NoHomeDir -SeekFreeLoadingPCConsole -locale locale -language={locale} -Subtitles 20 -NOFORCEFEEDBACK -TELEMOPTIN 0";
             
                  me3game.Start();
+
+                 Console.ReadLine();
             
                 
 			}

@@ -1,24 +1,24 @@
-22:47:53.940  LEBinkProxy by d00telemental
-22:47:53.940  Version="1.1.0.0", built="Jun 10 2021 18:44:52", config="RELEASE"
-22:47:53.940  Only trust distributions from the official NexusMods page:
-22:47:53.940  https://www.nexusmods.com/masseffectlegendaryedition/mods/9
-22:47:53.940  ..Initialize: cmd line = "D:\Games\Mass Effect Legendary Edition/Game/ME1/Binaries/Win64/MassEffect1.exe" -NoHomeDir -SeekFreeLoadingPCConsole -locale locale -OVERRIDELANGUAGE=RA -Subtitles 20 -NOFORCEFEEDBACK -TELEMOPTIN 0
-22:47:53.940  ..Initialize: exe path = D:\Games\Mass Effect Legendary Edition\Game\ME1\Binaries\Win64\MassEffect1.exe
-22:47:53.940  ..Initialize: exe name = MassEffect1.exe
-22:47:53.940  ..Initialize: win title = Mass Effect
-22:47:53.941  HookManager.Install: created hook [CreateWindowExW]
-22:47:53.980  HookManager.Install: installed hook [CreateWindowExW]
-22:47:53.980  WaitForDRMv2: waiting for DRM...
-22:47:55.429  CreateWindowExW: matched a title, signaling the event [0000000000FF5DA0]
-22:47:55.429  WaitForDRMv2: event signaled!
-22:47:55.483  SuspendAllOtherThreads: returning.
-22:47:55.500  findOffsets_: found UFunction::Bind at 00007FF712172DC0.
-22:47:55.505  findOffsets_: found GetName at 00007FF712154F20.
-22:47:55.505  detourOffsets_: installing 00007FFD728A29D0 into 00007FF712172DC0, preserving into 00007FFD728CFFE0
-22:47:55.506  HookManager.Install: created hook [UFunctionBind]
-22:47:55.558  HookManager.Install: installed hook [UFunctionBind]
-22:47:55.608  ResumeAllOtherThreads: returning.
-22:47:59.455  UFunctionBind (LE1): IsShippingPCBuild (pFunction = 0x000000001EEA9540).
-22:47:59.455  UFunctionBind (LE1): IsFinalReleaseDebugConsoleBuild (pFunction = 0x000000001EEA7A40).
-22:48:14.123  UE::AlwaysPositiveNative: called for Default__WorldInfo.
-22:50:21.139  OnDetach: goodbye, I thought we were friends :(
+23:13:25.066  LEBinkProxy by d00telemental
+23:13:25.066  Version="1.1.0.0", built="Jun 10 2021 18:44:52", config="RELEASE"
+23:13:25.066  Only trust distributions from the official NexusMods page:
+23:13:25.066  https://www.nexusmods.com/masseffectlegendaryedition/mods/9
+23:13:25.066  ..Initialize: cmd line = "D:\Games\Mass Effect Legendary Edition/Game/ME1/Binaries/Win64/MassEffect1.exe" -NoHomeDir -SeekFreeLoadingPCConsole -locale locale -OVERRIDELANGUAGE=RA -Subtitles 20 -NOFORCEFEEDBACK -TELEMOPTIN 0
+23:13:25.066  ..Initialize: exe path = D:\Games\Mass Effect Legendary Edition\Game\ME1\Binaries\Win64\MassEffect1.exe
+23:13:25.066  ..Initialize: exe name = MassEffect1.exe
+23:13:25.066  ..Initialize: win title = Mass Effect
+23:13:25.066  HookManager.Install: created hook [CreateWindowExW]
+23:13:25.106  HookManager.Install: installed hook [CreateWindowExW]
+23:13:25.106  WaitForDRMv2: waiting for DRM...
+23:13:26.324  CreateWindowExW: matched a title, signaling the event [0000000000F066B0]
+23:13:26.324  WaitForDRMv2: event signaled!
+23:13:26.379  SuspendAllOtherThreads: returning.
+23:13:26.412  findOffsets_: found UFunction::Bind at 00007FF712172DC0.
+23:13:26.417  findOffsets_: found GetName at 00007FF712154F20.
+23:13:26.417  detourOffsets_: installing 00007FFD747B29D0 into 00007FF712172DC0, preserving into 00007FFD747DFFE0
+23:13:26.417  HookManager.Install: created hook [UFunctionBind]
+23:13:26.468  HookManager.Install: installed hook [UFunctionBind]
+23:13:26.515  ResumeAllOtherThreads: returning.
+23:13:30.435  UFunctionBind (LE1): IsShippingPCBuild (pFunction = 0x000000001EBEFDB0).
+23:13:30.436  UFunctionBind (LE1): IsFinalReleaseDebugConsoleBuild (pFunction = 0x000000001EBF1AF0).
+23:13:48.868  UE::AlwaysPositiveNative: called for Default__WorldInfo.
+23:14:06.617  OnDetach: goodbye, I thought we were friends :(

@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v5.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v5.0": {
+      "MELE-launcher/1.0.0": {
+        "runtime": {
+          "MELE-launcher.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "MELE-launcher/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
