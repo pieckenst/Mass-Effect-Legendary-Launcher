@@ -7,7 +7,7 @@ namespace MELE_launcher
 	{
 		static void Main(string[] args)
 		{
-			Console.Title = "XIVLOADER";
+			Console.Title = "Legendary Launcher";
             Console.OutputEncoding = System.Text.Encoding.Unicode;
 
             var arr = new[]

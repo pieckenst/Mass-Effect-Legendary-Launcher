@@ -4,6 +4,8 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
     <RootNamespace>MELE_launcher</RootNamespace>
+    <ApplicationIcon>MassEffect_LE_Icon_512px.ico</ApplicationIcon>
+    <Description>Launcher for the Mass Effect Legendary Edition</Description>
   </PropertyGroup>
 
 </Project>
