@@ -1,0 +1,16 @@
+C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\bin\Debug\net5.0\MELE-launcher.exe
+C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\bin\Debug\net5.0\MELE-launcher.deps.json
+C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\bin\Debug\net5.0\MELE-launcher.runtimeconfig.json
+C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\bin\Debug\net5.0\MELE-launcher.runtimeconfig.dev.json
+C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\bin\Debug\net5.0\MELE-launcher.dll
+C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\bin\Debug\net5.0\ref\MELE-launcher.dll
+C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\bin\Debug\net5.0\MELE-launcher.pdb
+C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\obj\Debug\net5.0\MELE-launcher.csproj.AssemblyReference.cache
+C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\obj\Debug\net5.0\MELE-launcher.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\obj\Debug\net5.0\MELE-launcher.AssemblyInfoInputs.cache
+C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\obj\Debug\net5.0\MELE-launcher.AssemblyInfo.cs
+C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\obj\Debug\net5.0\MELE-launcher.csproj.CoreCompileInputs.cache
+C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\obj\Debug\net5.0\MELE-launcher.dll
+C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\obj\Debug\net5.0\ref\MELE-launcher.dll
+C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\obj\Debug\net5.0\MELE-launcher.pdb
+C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\obj\Debug\net5.0\MELE-launcher.genruntimeconfig.cache
