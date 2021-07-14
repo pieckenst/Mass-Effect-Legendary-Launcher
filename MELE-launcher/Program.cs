@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 
 namespace MELE_launcher
 {
@@ -31,18 +32,55 @@ namespace MELE_launcher
             Console.WriteLine("ME1 - Mass Effect 1 , ME2 - Mass Effect 2 , ME3- Mass Effect 3");
             Console.Write("INPUT : - ");
             string choice = Console.ReadLine();
+            Process me1game = new Process();
+            Process me2game = new Process();
+            Process me3game = new Process();
+            Console.WriteLine();
+            string gamePath;
+            if (File.Exists(Directory.GetCurrentDirectory() + @"\gamepath.txt")) {
+                TextReader tr = new StreamReader("gamepath.txt");
+                string gamePathread = tr.ReadLine();
+                gamePath = gamePathread;
+                tr.Close();
+                Console.WriteLine(gamePath);
+            }
+            else
+			{
+                Console.Write("Please enter your gamepath - ");
+                gamePath = Console.ReadLine();
+                TextWriter tw = new StreamWriter("gamepath.txt");
+                tw.WriteLine(gamePath);
+                tw.Close();
+			}
+            bool ForceFeedback = false;
+            Console.Write("Do you wish to enable Controler Force Feedback? - ");
+            string promtw = Console.ReadLine();
+            if (promtw.ToLower() == "yes")
+            {
+                ForceFeedback = true;
+            }
+            else
+            {
+                ForceFeedback = false;
+            }
             if (choice == "ME1")
 			{
-                Console.WriteLine();
-                Console.Write("Please enter your gamepath - ");
-                string gamePath = Console.ReadLine();
+
+                
                 Console.Write("Please enter your locale - ");
                 string locale = Console.ReadLine();
                 
-                 Process me1game = new Process();
-                 me1game.StartInfo.FileName = gamePath + "/Game/ME1/Binaries/Win64/MassEffect1.exe";
                  
-                 me1game.StartInfo.Arguments = $"-NoHomeDir -SeekFreeLoadingPCConsole -locale locale -OVERRIDELANGUAGE={locale} -Subtitles 20 -NOFORCEFEEDBACK -TELEMOPTIN 0";
+                 me1game.StartInfo.FileName = Path.Join(gamePath, "/Game/ME1/Binaries/Win64/MassEffect1.exe");
+
+                 if (ForceFeedback == true)
+				 {
+                    me1game.StartInfo.Arguments = $"-NoHomeDir -SeekFreeLoadingPCConsole -locale locale -OVERRIDELANGUAGE={locale} -Subtitles 20 -TELEMOPTIN 0";
+				 }
+                 else {
+                    me1game.StartInfo.Arguments = $"-NoHomeDir -SeekFreeLoadingPCConsole -locale locale -OVERRIDELANGUAGE={locale} -Subtitles 20 -NOFORCEFEEDBACK -TELEMOPTIN 0";
+                 }
+                 
             
                  me1game.Start();
 
@@ -52,16 +90,21 @@ namespace MELE_launcher
 			}
             if (choice == "ME2")
 			{
-                Console.WriteLine();
-                Console.Write("Please enter your gamepath - ");
-                string gamePath = Console.ReadLine();
+                
+                
                 Console.Write("Please enter your locale - ");
                 string locale = Console.ReadLine();
                 
-                 Process me2game = new Process();
-                 me2game.StartInfo.FileName = gamePath + "/Game/ME2/Binaries/Win64/MassEffect2.exe";
                  
-                 me2game.StartInfo.Arguments = $"-NoHomeDir -SeekFreeLoadingPCConsole -locale locale -OVERRIDELANGUAGE={locale} -Subtitles 20 -NOFORCEFEEDBACK -TELEMOPTIN 0";
+                 me2game.StartInfo.FileName = Path.Join(gamePath, "/Game/ME2/Binaries/Win64/MassEffect2.exe");
+                 
+                 if (ForceFeedback == true)
+				 {
+                    me2game.StartInfo.Arguments = $"-NoHomeDir -SeekFreeLoadingPCConsole -locale locale -OVERRIDELANGUAGE={locale} -Subtitles 20 -TELEMOPTIN 0";
+				 }
+                 else {
+                    me2game.StartInfo.Arguments = $"-NoHomeDir -SeekFreeLoadingPCConsole -locale locale -OVERRIDELANGUAGE={locale} -Subtitles 20 -NOFORCEFEEDBACK -TELEMOPTIN 0";
+                 }
             
                  me2game.Start();
 
@@ -71,16 +114,21 @@ namespace MELE_launcher
 			}
             if (choice == "ME3")
 			{
-                Console.WriteLine();
-                Console.Write("Please enter your gamepath - ");
-                string gamePath = Console.ReadLine();
+                
                 Console.Write("Please enter your locale - ");
                 string locale = Console.ReadLine();
                 
-                 Process me3game = new Process();
-                 me3game.StartInfo.FileName = gamePath + "/Game/ME3/Binaries/Win64/MassEffect3.exe";
                  
-                 me3game.StartInfo.Arguments = $"-NoHomeDir -SeekFreeLoadingPCConsole -locale locale -language={locale} -Subtitles 20 -NOFORCEFEEDBACK -TELEMOPTIN 0";
+                 me3game.StartInfo.FileName = Path.Join(gamePath, "/Game/ME3/Binaries/Win64/MassEffect3.exe");
+
+                 if (ForceFeedback == true)
+				 {
+                    me3game.StartInfo.Arguments = $"-NoHomeDir -SeekFreeLoadingPCConsole -locale locale -language={locale} -Subtitles 20 -TELEMOPTIN 0";
+				 }
+                 else {
+                    me3game.StartInfo.Arguments = $"-NoHomeDir -SeekFreeLoadingPCConsole -locale locale -language={locale} -Subtitles 20 -NOFORCEFEEDBACK -TELEMOPTIN 0";
+                 }
+                 
             
                  me3game.Start();
 

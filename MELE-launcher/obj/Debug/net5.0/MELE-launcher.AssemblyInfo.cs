@@ -11,13 +11,13 @@
 using System;
 using System.Reflection;
 
-[assembly: System.Reflection.AssemblyCompanyAttribute("MELE-launcher")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("MassEffectLauncher")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("Launcher for the Mass Effect Legendary Edition")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
-[assembly: System.Reflection.AssemblyProductAttribute("MELE-launcher")]
-[assembly: System.Reflection.AssemblyTitleAttribute("MELE-launcher")]
+[assembly: System.Reflection.AssemblyProductAttribute("MassEffectLauncher")]
+[assembly: System.Reflection.AssemblyTitleAttribute("MassEffectLauncher")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
 
 // Создано классом WriteCodeFragment MSBuild.
