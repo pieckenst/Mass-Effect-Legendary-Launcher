@@ -1,4 +1,3 @@
-C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\obj\Debug\net5.0\MELE-launcher.csproj.AssemblyReference.cache
 C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\obj\Debug\net5.0\MELE-launcher.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\obj\Debug\net5.0\MELE-launcher.AssemblyInfoInputs.cache
 C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\obj\Debug\net5.0\MELE-launcher.AssemblyInfo.cs
