@@ -232,6 +232,10 @@ namespace MELE_launcher
                 }
                 else
 				{
+                    foreach (string line in arr)
+                    {
+                      Console.WriteLine(line);
+                    }
                     Console.WriteLine("Arguments: Game: {0}, Force Feedback: {1}, Language: {2}",args[0], args[1] , args[2]);
 				}
                 
