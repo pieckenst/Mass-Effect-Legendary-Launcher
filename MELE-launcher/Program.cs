@@ -179,11 +179,12 @@ namespace MELE_launcher
                         Console.Write("Please enter your legacy Mass Effect 1 gamepath - ");
                         legacygamePathme1 = Console.ReadLine();
                         TextWriter tw = new StreamWriter("me1gamepath.txt");
-                        tw.WriteLine(gamePath);
+                        tw.WriteLine(legacygamePathme1);
                         tw.Close();
 					}
                     lmexgame.StartInfo.FileName = Path.Join(legacygamePathme1, "/Binaries/Win32/MassEffect.exe");
                     lmexgame.Start();
+                    Console.ReadLine();
                 }
                 if (choice == "OLDME2" || choice == "-OLDME2") 
                 {
@@ -198,11 +199,12 @@ namespace MELE_launcher
                         Console.Write("Please enter your legacy Mass Effect 2 gamepath - ");
                         legacygamePathme2 = Console.ReadLine();
                         TextWriter tw = new StreamWriter("me2gamepath.txt");
-                        tw.WriteLine(gamePath);
+                        tw.WriteLine(legacygamePathme2);
                         tw.Close();
 					}
                     lmexgame.StartInfo.FileName = Path.Join(legacygamePathme2, "/Binaries/Win32/MassEffect2.exe");
                     lmexgame.Start();
+                    Console.ReadLine();
                 }
                 if (choice == "OLDME3" || choice == "-OLDME3") 
                 {
@@ -217,11 +219,12 @@ namespace MELE_launcher
                         Console.Write("Please enter your legacy Mass Effect 3 gamepath - ");
                         legacygamePathme3 = Console.ReadLine();
                         TextWriter tw = new StreamWriter("me3gamepath.txt");
-                        tw.WriteLine(gamePath);
+                        tw.WriteLine(legacygamePathme3);
                         tw.Close();
                     }
-                    lmexgame.StartInfo.FileName = Path.Join(legacygamePathme3, "/Binaries/Win32/MassEffect3.exe");
+                    lmexgame.StartInfo.FileName = Path.Join(legacygamePathme3, "Binaries/Win32/MassEffect3.exe");
                     lmexgame.Start();
+                    Console.ReadLine();
                 }
             }
             else
@@ -387,7 +390,7 @@ namespace MELE_launcher
                         Console.Write("Please enter your legacy Mass Effect 1 gamepath - ");
                         legacygamePathme1 = Console.ReadLine();
                         TextWriter tw = new StreamWriter("me1gamepath.txt");
-                        tw.WriteLine(gamePath);
+                        tw.WriteLine(legacygamePathme1);
                         tw.Close();
 					}
                     lmexgame.StartInfo.FileName = Path.Join(legacygamePathme1, "/Binaries/Win32/MassEffect.exe");
@@ -406,7 +409,7 @@ namespace MELE_launcher
                         Console.Write("Please enter your legacy Mass Effect 2 gamepath - ");
                         legacygamePathme2 = Console.ReadLine();
                         TextWriter tw = new StreamWriter("me2gamepath.txt");
-                        tw.WriteLine(gamePath);
+                        tw.WriteLine(legacygamePathme2);
                         tw.Close();
 					}
                     lmexgame.StartInfo.FileName = Path.Join(legacygamePathme2, "/Binaries/Win32/MassEffect2.exe");
@@ -425,10 +428,10 @@ namespace MELE_launcher
                         Console.Write("Please enter your legacy Mass Effect 3 gamepath - ");
                         legacygamePathme3 = Console.ReadLine();
                         TextWriter tw = new StreamWriter("me3gamepath.txt");
-                        tw.WriteLine(gamePath);
+                        tw.WriteLine(legacygamePathme3);
                         tw.Close();
                     }
-                    lmexgame.StartInfo.FileName = Path.Join(legacygamePathme3, "/Binaries/Win32/MassEffect3.exe");
+                    lmexgame.StartInfo.FileName = Path.Join(legacygamePathme3, "Binaries/Win32/MassEffect3.exe");
                     lmexgame.Start();
                 }
                 if (args[3] == "silent" || args[3] == "-silent" || args[1] == "-silent")
