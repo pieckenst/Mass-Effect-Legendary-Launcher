@@ -13,4 +13,3 @@ C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\bin\Release\net5
 C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\obj\Release\net5.0\MassEffectLauncher.dll
 C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\obj\Release\net5.0\ref\MassEffectLauncher.dll
 C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\obj\Release\net5.0\MassEffectLauncher.pdb
-C:\Users\Andrey Savich\source\repos\MELE-launcher\MELE-launcher\obj\Release\net5.0\MELE-launcher.csproj.AssemblyReference.cache

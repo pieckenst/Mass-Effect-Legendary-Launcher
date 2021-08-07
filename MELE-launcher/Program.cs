@@ -40,7 +40,7 @@ namespace MELE_launcher
                   Console.WriteLine(line);
                 }
                 Console.WriteLine("What do you wish to launch?");
-                Console.WriteLine("ME1 - Mass Effect 1 , ME2 - Mass Effect 2 , ME3- Mass Effect 3 , OLDME1 - Legacy Mass Effect 1 , OLDME2 - Legacy Mass Effect 2, OLDME3 - Legacy Mass Effect 3");
+                Console.WriteLine("ME1 - Mass Effect 1 , ME2 - Mass Effect 2 , ME3- Mass Effect 3 \nOLDME1 - Legacy Mass Effect 1 , OLDME2 - Legacy Mass Effect 2, OLDME3 - Legacy Mass Effect 3");
                 Console.Write("INPUT : - ");
                 string choice = Console.ReadLine();
                 Process me1game = new Process();
