@@ -229,18 +229,7 @@ namespace MELE_launcher
             }
             else
 			{
-                if (args[3] == "silent" || args[3] == "-silent" || args[1] == "-silent" )
-			    {
-                    Console.WriteLine();
-                }
-                else
-				{
-                    foreach (string line in arr)
-                    {
-                      Console.WriteLine(line);
-                    }
-                    Console.WriteLine("Arguments: Game: {0}, Force Feedback: {1}, Language: {2}",args[0], args[1] , args[2]);
-				}
+                
                 
                 string choice = args[0];
                 Process me1game = new Process();
@@ -270,8 +259,20 @@ namespace MELE_launcher
                 
                 if (choice == "ME1" || choice == "-ME1")
 			    {
-
-                
+              
+                  
+                  if (args[3] == "silent" || args[3] == "-silent" )
+			      {
+                    Console.WriteLine();
+                  }
+                  else
+				  {
+                    foreach (string line in arr)
+                    {
+                      Console.WriteLine(line);
+                    }
+                    Console.WriteLine("Arguments: Game: {0}, Force Feedback: {1}, Language: {2}",args[0], args[1] , args[2]);
+				  }
                   string promtw = args[1];
                   if (promtw.ToLower() == "yes" || promtw.ToLower() == "-yes")
                   {
@@ -307,7 +308,18 @@ namespace MELE_launcher
                 if (choice == "ME2" || choice == "-ME2")
 			    {
                 
-                
+                  if (args[3] == "silent" || args[3] == "-silent" )
+			      {
+                    Console.WriteLine();
+                  }
+                  else
+				  {
+                    foreach (string line in arr)
+                    {
+                      Console.WriteLine(line);
+                    }
+                    Console.WriteLine("Arguments: Game: {0}, Force Feedback: {1}, Language: {2}",args[0], args[1] , args[2]);
+				  }
                   string promtw = args[1];
                   if (promtw.ToLower() == "yes" || promtw.ToLower() == "-yes")
                   {
@@ -344,6 +356,18 @@ namespace MELE_launcher
                 if (choice == "ME3" || choice == "-ME3")
 			    {
                 
+                  if (args[3] == "silent" || args[3] == "-silent" )
+			      {
+                    Console.WriteLine();
+                  }
+                  else
+				  {
+                    foreach (string line in arr)
+                    {
+                      Console.WriteLine(line);
+                    }
+                    Console.WriteLine("Arguments: Game: {0}, Force Feedback: {1}, Language: {2}",args[0], args[1] , args[2]);
+				  }
                   string promtw = args[1];
                   if (promtw.ToLower() == "yes" || promtw.ToLower() == "-yes")
                   {
@@ -379,6 +403,19 @@ namespace MELE_launcher
                 }
                 if (choice == "OLDME1" || choice == "-OLDME1") 
                 {
+                    if ( args[1] == "-silent")
+			        {
+                      Console.WriteLine();
+                    }
+
+                    else
+				    {
+                      foreach (string line in arr)
+                      {
+                        Console.WriteLine(line);
+                      }
+                      Console.WriteLine("Arguments: Game: {0}, Force Feedback: {1}, Language: {2}",args[0], args[1] , args[2]);
+				    }
                     if (File.Exists(Directory.GetCurrentDirectory() + @"\me1gamepath.txt")) {
                         TextReader tr = new StreamReader("me1gamepath.txt");
                         string gamePathreadme1 = tr.ReadLine();
@@ -398,6 +435,19 @@ namespace MELE_launcher
                 }
                 if (choice == "OLDME2" || choice == "-OLDME2") 
                 {
+                    if ( args[1] == "-silent")
+			        {
+                      Console.WriteLine();
+                    }
+
+                    else
+				    {
+                      foreach (string line in arr)
+                      {
+                        Console.WriteLine(line);
+                      }
+                      Console.WriteLine("Arguments: Game: {0}, Force Feedback: {1}, Language: {2}",args[0], args[1] , args[2]);
+				    }
                     if (File.Exists(Directory.GetCurrentDirectory() + @"\me2gamepath.txt")) {
                         TextReader tr = new StreamReader("me2gamepath.txt");
                         string gamePathreadme2 = tr.ReadLine();
@@ -417,6 +467,19 @@ namespace MELE_launcher
                 }
                 if (choice == "OLDME3" || choice == "-OLDME3") 
                 {
+                    if ( args[1] == "-silent")
+			        {
+                      Console.WriteLine();
+                    }
+
+                    else
+				    {
+                      foreach (string line in arr)
+                      {
+                        Console.WriteLine(line);
+                      }
+                      Console.WriteLine("Arguments: Game: {0}, Force Feedback: {1}, Language: {2}",args[0], args[1] , args[2]);
+				    }
                     if (File.Exists(Directory.GetCurrentDirectory() + @"\me3gamepath.txt")) {
                         TextReader tr = new StreamReader("me3gamepath.txt");
                         string gamePathreadme3 = tr.ReadLine();
@@ -434,7 +497,7 @@ namespace MELE_launcher
                     lmexgame.StartInfo.FileName = Path.Join(legacygamePathme3, "Binaries/Win32/MassEffect3.exe");
                     lmexgame.Start();
                 }
-                if (args[3] == "silent" || args[3] == "-silent" || args[1] == "-silent")
+                if ( args[1] == "-silent" || args[3] == "silent" || args[3] == "-silent")
 			    {
                     Console.WriteLine();
                 }
