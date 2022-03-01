@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-11">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.osgi_3.17.100.v20211104-1730.jar" sourcepath="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.osgi_3.17.100.v20211104-1730.jar"/>
+	<classpathentry kind="lib" path="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.core.commands_3.10.100.v20210722-1426.jar" sourcepath="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.core.commands_3.10.100.v20210722-1426.jar"/>
+	<classpathentry kind="lib" path="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.equinox.common_3.15.100.v20211021-1418.jar" sourcepath="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.equinox.common_3.15.100.v20211021-1418.jar"/>
+	<classpathentry kind="lib" path="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.equinox.registry_3.11.100.v20211021-1418.jar" sourcepath="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.equinox.registry_3.11.100.v20211021-1418.jar"/>
+	<classpathentry kind="lib" path="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.core.runtime_3.24.0.v20210910-0750.jar" sourcepath="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.core.runtime_3.24.0.v20210910-0750.jar"/>
+	<classpathentry kind="lib" path="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.text_3.12.0.v20210512-1644.jar" sourcepath="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.text_3.12.0.v20210512-1644.jar"/>
+	<classpathentry kind="lib" path="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.swt.win32.win32.x86_64_3.118.0.v20211123-0851.jar" sourcepath="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.swt.win32.win32.x86_64_3.118.0.v20211123-0851.jar">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.jface_3.24.0.v20211110-1517.jar" sourcepath="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.jface_3.24.0.v20211110-1517.jar"/>
+	<classpathentry kind="lib" path="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.jface.text_3.19.0.v20211026-2100.jar" sourcepath="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.jface.text_3.19.0.v20211026-2100.jar"/>
+	<classpathentry kind="lib" path="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.ui.workbench_3.124.0.v20211116-0651.jar" sourcepath="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.ui.workbench_3.124.0.v20211116-0651.jar"/>
+	<classpathentry kind="lib" path="C:/Users/AndreySavich/.p2/pool/plugins/com.ibm.icu_67.1.0.v20200706-1749.jar" sourcepath="C:/Users/AndreySavich/.p2/pool/plugins/com.ibm.icu_67.1.0.v20200706-1749.jar"/>
+	<classpathentry kind="lib" path="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.ui.forms_3.11.300.v20211022-1451.jar" sourcepath="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.ui.forms_3.11.300.v20211022-1451.jar"/>
+	<classpathentry kind="lib" path="org.pushingpixels.trident_1.2.0.v20100204-1500.jar" sourcepath="org.pushingpixels.trident.source_1.2.0.v20100204-1500.jar"/>
+	<classpathentry kind="lib" path="org.eclipse.e4.xwt_0.9.1.SNAPSHOT.jar" sourcepath="org.eclipse.e4.xwt.source_0.9.1.SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="org.eclipse.e4.xwt.forms_0.9.1.SNAPSHOT.jar" sourcepath="org.eclipse.e4.xwt.forms.source_0.9.1.SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.core.databinding_1.10.100.v20200926-1123.jar" sourcepath="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.core.databinding_1.10.100.v20200926-1123.jar"/>
+	<classpathentry kind="lib" path="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.core.databinding.observable_1.11.0.v20210722-1426.jar" sourcepath="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.core.databinding.observable_1.11.0.v20210722-1426.jar"/>
+	<classpathentry kind="lib" path="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.jface.databinding_1.13.0.v20210619-1146.jar" sourcepath="C:/Users/AndreySavich/.p2/pool/plugins/org.eclipse.jface.databinding_1.13.0.v20210619-1146.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.eclipse.swt.win32.win32.x86_64"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.eclipse.swt"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.eclipse.jface"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

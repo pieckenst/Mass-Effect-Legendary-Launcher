@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_run_jar" name="Create Runnable Jar for Project MELEjavaLauncherGUI with Jar-in-Jar Loader">
+    <!--this file was created by Eclipse Runnable JAR file Export Wizard-->
+    <!--ANT 1.7 is required-->
+    <!--define folder properties-->
+    <property name="dir.buildfile" value="."/>
+    <property name="dir.workspace" value="${dir.buildfile}/../../.."/>
+    <property name="dir.jarfile" value="${dir.buildfile}"/>
+    <target name="create_run_jar">
+        <jar destfile="${dir.jarfile}/FinBuild.jar">
+            <manifest>
+                <attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader"/>
+                <attribute name="Rsrc-Main-Class" value="melelauncherGUI.LauncherForm"/>
+                <attribute name="Class-Path" value="."/>
+                <attribute name="Rsrc-Class-Path" value="./ org.eclipse.osgi_3.17.100.v20211104-1730.jar org.eclipse.core.commands_3.10.100.v20210722-1426.jar org.eclipse.equinox.common_3.15.100.v20211021-1418.jar org.eclipse.equinox.registry_3.11.100.v20211021-1418.jar org.eclipse.core.runtime_3.24.0.v20210910-0750.jar org.eclipse.text_3.12.0.v20210512-1644.jar org.eclipse.swt.win32.win32.x86_64_3.118.0.v20211123-0851.jar org.eclipse.jface_3.24.0.v20211110-1517.jar org.eclipse.jface.text_3.19.0.v20211026-2100.jar org.eclipse.ui.workbench_3.124.0.v20211116-0651.jar com.ibm.icu_67.1.0.v20200706-1749.jar org.eclipse.ui.forms_3.11.300.v20211022-1451.jar org.pushingpixels.trident_1.2.0.v20100204-1500.jar org.eclipse.e4.xwt_0.9.1.SNAPSHOT.jar org.eclipse.e4.xwt.forms_0.9.1.SNAPSHOT.jar org.eclipse.core.databinding_1.10.100.v20200926-1123.jar org.eclipse.core.databinding.observable_1.11.0.v20210722-1426.jar org.eclipse.jface.databinding_1.13.0.v20210619-1146.jar org.eclipse.swt_3.118.0.v20211123-0851.jar org.eclipse.swt.win32.win32.x86_64_3.118.0.v20211123-0851.jar org.eclipse.equinox.bidi_1.4.100.v20211021-1418.jar org.eclipse.osgi.compatibility.state_1.2.500.v20210730-0750.jar org.eclipse.jface_3.24.0.v20211110-1517.jar"/>
+            </manifest>
+            <zipfileset src="jar-in-jar-loader.zip"/>
+            <fileset dir="${dir.workspace}/MELEjavaLauncherGUI/bin"/>
+            <zipfileset dir="C:/Users/AndreySavich/.p2/pool/plugins" includes="org.eclipse.osgi_3.17.100.v20211104-1730.jar"/>
+            <zipfileset dir="C:/Users/AndreySavich/.p2/pool/plugins" includes="org.eclipse.core.commands_3.10.100.v20210722-1426.jar"/>
+            <zipfileset dir="C:/Users/AndreySavich/.p2/pool/plugins" includes="org.eclipse.equinox.common_3.15.100.v20211021-1418.jar"/>
+            <zipfileset dir="C:/Users/AndreySavich/.p2/pool/plugins" includes="org.eclipse.equinox.registry_3.11.100.v20211021-1418.jar"/>
+            <zipfileset dir="C:/Users/AndreySavich/.p2/pool/plugins" includes="org.eclipse.core.runtime_3.24.0.v20210910-0750.jar"/>
+            <zipfileset dir="C:/Users/AndreySavich/.p2/pool/plugins" includes="org.eclipse.text_3.12.0.v20210512-1644.jar"/>
+            <zipfileset dir="C:/Users/AndreySavich/.p2/pool/plugins" includes="org.eclipse.swt.win32.win32.x86_64_3.118.0.v20211123-0851.jar"/>
+            <zipfileset dir="C:/Users/AndreySavich/.p2/pool/plugins" includes="org.eclipse.jface_3.24.0.v20211110-1517.jar"/>
+            <zipfileset dir="C:/Users/AndreySavich/.p2/pool/plugins" includes="org.eclipse.jface.text_3.19.0.v20211026-2100.jar"/>
+            <zipfileset dir="C:/Users/AndreySavich/.p2/pool/plugins" includes="org.eclipse.ui.workbench_3.124.0.v20211116-0651.jar"/>
+            <zipfileset dir="C:/Users/AndreySavich/.p2/pool/plugins" includes="com.ibm.icu_67.1.0.v20200706-1749.jar"/>
+            <zipfileset dir="C:/Users/AndreySavich/.p2/pool/plugins" includes="org.eclipse.ui.forms_3.11.300.v20211022-1451.jar"/>
+            <zipfileset dir="${dir.workspace}/MELEjavaLauncherGUI" includes="org.pushingpixels.trident_1.2.0.v20100204-1500.jar"/>
+            <zipfileset dir="${dir.workspace}/MELEjavaLauncherGUI" includes="org.eclipse.e4.xwt_0.9.1.SNAPSHOT.jar"/>
+            <zipfileset dir="${dir.workspace}/MELEjavaLauncherGUI" includes="org.eclipse.e4.xwt.forms_0.9.1.SNAPSHOT.jar"/>
+            <zipfileset dir="C:/Users/AndreySavich/.p2/pool/plugins" includes="org.eclipse.core.databinding_1.10.100.v20200926-1123.jar"/>
+            <zipfileset dir="C:/Users/AndreySavich/.p2/pool/plugins" includes="org.eclipse.core.databinding.observable_1.11.0.v20210722-1426.jar"/>
+            <zipfileset dir="C:/Users/AndreySavich/.p2/pool/plugins" includes="org.eclipse.jface.databinding_1.13.0.v20210619-1146.jar"/>
+            <zipfileset dir="${dir.workspace}/org.eclipse.swt" includes="org.eclipse.swt_3.118.0.v20211123-0851.jar"/>
+            <zipfileset dir="${dir.workspace}/org.eclipse.swt.win32.win32.x86_64" includes="org.eclipse.swt.win32.win32.x86_64_3.118.0.v20211123-0851.jar"/>
+            <zipfileset dir="C:/Users/AndreySavich/.p2/pool/plugins" includes="org.eclipse.equinox.bidi_1.4.100.v20211021-1418.jar"/>
+            <zipfileset dir="C:/Users/AndreySavich/.p2/pool/plugins" includes="org.eclipse.osgi.compatibility.state_1.2.500.v20210730-0750.jar"/>
+            <zipfileset dir="${dir.workspace}/org.eclipse.jface" includes="org.eclipse.jface_3.24.0.v20211110-1517.jar"/>
+        </jar>
+    </target>
+</project>
