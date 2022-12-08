@@ -11,7 +11,7 @@
         "projectName": "MassEffectLauncher",
         "projectPath": "C:\\Users\\rsncra\\Source\\Repos\\Mass-Effect-Legendary-Launcher\\MELE-launcher\\MELE-launcher.csproj",
         "packagesPath": "C:\\Users\\rsncra\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\rsncra\\Source\\Repos\\Mass-Effect-Legendary-Launcher\\MELE-launcher\\obj\\",
+        "outputPath": "C:\\Users\\rsncra\\source\\repos\\Mass-Effect-Legendary-Launcher\\MELE-launcher\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "F:\\sdks\\NuGetPackages"

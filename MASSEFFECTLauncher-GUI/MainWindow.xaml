@@ -1,0 +1,32 @@
+﻿<Window x:Class="MASSEFFECTLauncher_GUI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MASSEFFECTLauncher_GUI"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="429" Width="830" WindowStyle="None"
+        ResizeMode="NoResize" WindowStartupLocation="CenterScreen"
+        AllowsTransparency="True" Background="{x:Null}" MouseDown="MainWindow_OnMouseDown">
+
+    <Grid>
+        <Canvas>
+            <Image Height="354" Source="/roundrect.png" Canvas.Left="14" Canvas.Top="45" Panel.ZIndex="-1" Stretch="Fill" StretchDirection="Both" Width="780" />
+            <DockPanel />
+            <Button x:Name="lbl_progressBar" Content="Launch" Canvas.Left="493" Canvas.Top="299"  BorderBrush="{x:Null}" Foreground="White" Height="60" Width="266" Background="Black" Click="lbl_progressBar_Click"/>
+            <Button x:Name="btnClose1" Content="X" Canvas.Left="695" Height="59" Width="71" Foreground="Black" BorderBrush="{x:Null}" Background="{x:Null}" Canvas.Top="61" FontSize="30"  RenderTransformOrigin="0.465,0.155" HorizontalAlignment="Center" VerticalAlignment="Top" Click="BtnClose_Click"/>
+            <Label x:Name="gamelabeltext" Content="Legendary Launcher" Canvas.Left="44" Canvas.Top="61" Foreground="Black" FontSize="15"/>
+            <TextBox x:Name="gamepatherwrite" Canvas.Left="45" TextWrapping="Wrap" Text="" Canvas.Top="155" Width="714" Height="37" HorizontalAlignment="Center" VerticalAlignment="Top" AutomationProperties.HelpText="Please enter your gamepath here"/>
+            <TextBlock Canvas.Left="45" TextWrapping="Wrap" Text="Gamepath" Canvas.Top="123" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+            <ComboBox x:Name="gameselector" Canvas.Left="44" Canvas.Top="222" Width="173" HorizontalAlignment="Left" VerticalAlignment="Center">
+                <ComboBoxItem Content="Mass effect 1"/>
+                <ComboBoxItem Content="Mass effect 2"/>
+                <ComboBoxItem Content="Mass effect 3"/>
+                <ComboBoxItem Content="Mass effect 1 LE"/>
+                <ComboBoxItem Content="Mass effect 2 LE"/>
+                <ComboBoxItem Content="Mass effect 3 LE"/>
+            </ComboBox>
+            <TextBlock Canvas.Left="45" TextWrapping="Wrap" Text="Select game" Canvas.Top="193" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+        </Canvas>
+    </Grid>
+</Window>
