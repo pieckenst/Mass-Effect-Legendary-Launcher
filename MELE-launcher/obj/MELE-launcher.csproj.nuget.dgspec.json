@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Andrey Savich\\source\\repos\\MELE-launcher\\MELE-launcher\\MELE-launcher.csproj": {}
+    "C:\\Users\\rsncra\\Source\\Repos\\Mass-Effect-Legendary-Launcher\\MELE-launcher\\MELE-launcher.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Andrey Savich\\source\\repos\\MELE-launcher\\MELE-launcher\\MELE-launcher.csproj": {
+    "C:\\Users\\rsncra\\Source\\Repos\\Mass-Effect-Legendary-Launcher\\MELE-launcher\\MELE-launcher.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Andrey Savich\\source\\repos\\MELE-launcher\\MELE-launcher\\MELE-launcher.csproj",
+        "projectUniqueName": "C:\\Users\\rsncra\\Source\\Repos\\Mass-Effect-Legendary-Launcher\\MELE-launcher\\MELE-launcher.csproj",
         "projectName": "MassEffectLauncher",
-        "projectPath": "C:\\Users\\Andrey Savich\\source\\repos\\MELE-launcher\\MELE-launcher\\MELE-launcher.csproj",
-        "packagesPath": "C:\\Users\\Andrey Savich\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Andrey Savich\\source\\repos\\MELE-launcher\\MELE-launcher\\obj\\",
+        "projectPath": "C:\\Users\\rsncra\\Source\\Repos\\Mass-Effect-Legendary-Launcher\\MELE-launcher\\MELE-launcher.csproj",
+        "packagesPath": "C:\\Users\\rsncra\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\rsncra\\Source\\Repos\\Mass-Effect-Legendary-Launcher\\MELE-launcher\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+          "F:\\sdks\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Andrey Savich\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\rsncra\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -26,6 +26,7 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -49,7 +50,8 @@
             "net47",
             "net471",
             "net472",
-            "net48"
+            "net48",
+            "net481"
           ],
           "assetTargetFallback": true,
           "warn": true,
@@ -58,7 +60,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.100-preview.6.21355.2\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.100\\RuntimeIdentifierGraph.json"
         }
       }
     }

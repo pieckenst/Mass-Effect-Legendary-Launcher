@@ -40,7 +40,7 @@ namespace MELE_launcher
                   Console.WriteLine(line);
                 }
                 Console.WriteLine("What do you wish to launch?");
-                Console.WriteLine("ME1 - Mass Effect 1 , ME2 - Mass Effect 2 , ME3- Mass Effect 3 \nOLDME1 - Legacy Mass Effect 1 , OLDME2 - Legacy Mass Effect 2, OLDME3 - Legacy Mass Effect 3");
+                Console.WriteLine("ME1 - Mass Effect 1 , ME2 - Mass Effect 2 , ME3- Mass Effect 3 \nLEME1 - Mass Effect 1 Legendary Edition , LEME2 - Mass Effect 2 Legendary Edition, LEME3 - Mass Effect 3 Legendary Edition");
                 Console.Write("INPUT : - ");
                 string choice = Console.ReadLine();
                 Process me1game = new Process();
@@ -69,7 +69,7 @@ namespace MELE_launcher
 			    }
                 bool ForceFeedback = false;
                 
-                if (choice == "ME1")
+                if (choice == "LEME1")
 			    {
 
                   Console.Write("Do you wish to enable Controler Force Feedback? - ");
@@ -101,7 +101,7 @@ namespace MELE_launcher
 
                   Console.ReadLine();
                 }
-                if (choice == "ME2")
+                if (choice == "LEME2")
 			    {
                 
                   Console.Write("Do you wish to enable Controler Force Feedback? - ");
@@ -134,7 +134,7 @@ namespace MELE_launcher
             
                 
 			    }
-                if (choice == "ME3")
+                if (choice == "LEME3")
 			    {
                   Console.Write("Do you wish to enable Controler Force Feedback? - ");
                   string promtw = Console.ReadLine();
@@ -166,7 +166,7 @@ namespace MELE_launcher
                  Console.ReadLine();
 
                 }
-                if (choice == "OLDME1" || choice == "-OLDME1") 
+                if (choice == "ME1" || choice == "-ME1") 
                 {
                     if (File.Exists(Directory.GetCurrentDirectory() + @"\me1gamepath.txt")) {
                         TextReader tr = new StreamReader("me1gamepath.txt");
@@ -176,7 +176,7 @@ namespace MELE_launcher
                     }
                     else
 					{
-                        Console.Write("Please enter your legacy Mass Effect 1 gamepath - ");
+                        Console.Write("Please enter your Mass Effect 1 gamepath - ");
                         legacygamePathme1 = Console.ReadLine();
                         TextWriter tw = new StreamWriter("me1gamepath.txt");
                         tw.WriteLine(legacygamePathme1);
@@ -186,7 +186,7 @@ namespace MELE_launcher
                     lmexgame.Start();
                     Console.ReadLine();
                 }
-                if (choice == "OLDME2" || choice == "-OLDME2") 
+                if (choice == "ME2" || choice == "-ME2") 
                 {
                     if (File.Exists(Directory.GetCurrentDirectory() + @"\me2gamepath.txt")) {
                         TextReader tr = new StreamReader("me2gamepath.txt");
@@ -196,7 +196,7 @@ namespace MELE_launcher
                     }
                     else
 					{
-                        Console.Write("Please enter your legacy Mass Effect 2 gamepath - ");
+                        Console.Write("Please enter your Mass Effect 2 gamepath - ");
                         legacygamePathme2 = Console.ReadLine();
                         TextWriter tw = new StreamWriter("me2gamepath.txt");
                         tw.WriteLine(legacygamePathme2);
@@ -206,7 +206,7 @@ namespace MELE_launcher
                     lmexgame.Start();
                     Console.ReadLine();
                 }
-                if (choice == "OLDME3" || choice == "-OLDME3") 
+                if (choice == "ME3" || choice == "-ME3") 
                 {
                     if (File.Exists(Directory.GetCurrentDirectory() + @"\me3gamepath.txt")) {
                         TextReader tr = new StreamReader("me3gamepath.txt");
@@ -257,7 +257,7 @@ namespace MELE_launcher
 			    }
                 bool ForceFeedback = false;
                 
-                if (choice == "ME1" || choice == "-ME1")
+                if (choice == "LEME1" || choice == "-LEME1")
 			    {
               
                   
@@ -305,7 +305,7 @@ namespace MELE_launcher
 
                   
                 }
-                if (choice == "ME2" || choice == "-ME2")
+                if (choice == "LEME2" || choice == "-LEME2")
 			    {
                 
                   if (args[3] == "silent" || args[3] == "-silent" )
@@ -353,7 +353,7 @@ namespace MELE_launcher
             
                 
 			    }
-                if (choice == "ME3" || choice == "-ME3")
+                if (choice == "LEME3" || choice == "-LEME3")
 			    {
                 
                   if (args[3] == "silent" || args[3] == "-silent" )
@@ -401,7 +401,7 @@ namespace MELE_launcher
                  
 
                 }
-                if (choice == "OLDME1" || choice == "-OLDME1") 
+                if (choice == "ME1" || choice == "-ME1") 
                 {
                     if ( args[1] == "-silent")
 			        {
@@ -424,7 +424,7 @@ namespace MELE_launcher
                     }
                     else
 					{
-                        Console.Write("Please enter your legacy Mass Effect 1 gamepath - ");
+                        Console.Write("Please enter your Mass Effect 1 gamepath - ");
                         legacygamePathme1 = Console.ReadLine();
                         TextWriter tw = new StreamWriter("me1gamepath.txt");
                         tw.WriteLine(legacygamePathme1);
@@ -433,7 +433,7 @@ namespace MELE_launcher
                     lmexgame.StartInfo.FileName = Path.Join(legacygamePathme1, "/Binaries/Win32/MassEffect.exe");
                     lmexgame.Start();
                 }
-                if (choice == "OLDME2" || choice == "-OLDME2") 
+                if (choice == "ME2" || choice == "-ME2") 
                 {
                     if ( args[1] == "-silent")
 			        {
@@ -456,7 +456,7 @@ namespace MELE_launcher
                     }
                     else
 					{
-                        Console.Write("Please enter your legacy Mass Effect 2 gamepath - ");
+                        Console.Write("Please enter your Mass Effect 2 gamepath - ");
                         legacygamePathme2 = Console.ReadLine();
                         TextWriter tw = new StreamWriter("me2gamepath.txt");
                         tw.WriteLine(legacygamePathme2);
@@ -465,7 +465,7 @@ namespace MELE_launcher
                     lmexgame.StartInfo.FileName = Path.Join(legacygamePathme2, "/Binaries/Win32/MassEffect2.exe");
                     lmexgame.Start();
                 }
-                if (choice == "OLDME3" || choice == "-OLDME3") 
+                if (choice == "ME3" || choice == "-ME3") 
                 {
                     if ( args[1] == "-silent")
 			        {
@@ -488,7 +488,7 @@ namespace MELE_launcher
                     }
                     else
 					{
-                        Console.Write("Please enter your legacy Mass Effect 3 gamepath - ");
+                        Console.Write("Please enter your Mass Effect 3 gamepath - ");
                         legacygamePathme3 = Console.ReadLine();
                         TextWriter tw = new StreamWriter("me3gamepath.txt");
                         tw.WriteLine(legacygamePathme3);
