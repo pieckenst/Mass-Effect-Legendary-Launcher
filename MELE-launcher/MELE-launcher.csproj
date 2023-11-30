@@ -7,6 +7,7 @@
     <ApplicationIcon>MassEffect_LE_Icon_512px.ico</ApplicationIcon>
     <Description>Launcher for the Mass Effect Legendary Edition</Description>
     <AssemblyName>MassEffectLauncher</AssemblyName>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
 </Project>

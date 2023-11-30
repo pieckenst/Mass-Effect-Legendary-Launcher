@@ -6,6 +6,7 @@
     <RootNamespace>MASSEFFECTLauncher_GUI</RootNamespace>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
   <ItemGroup>

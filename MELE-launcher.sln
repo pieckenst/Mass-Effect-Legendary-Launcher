@@ -5,8 +5,7 @@ VisualStudioVersion = 17.0.31423.177
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MELE-launcher", "MELE-launcher\MELE-launcher.csproj", "{298E6350-01F4-4898-ACD3-05FF12F1821C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MASSEFFECTLauncher-GUI", "MASSEFFECTLauncher-GUI\MASSEFFECTLauncher-GUI.csproj", "{BA2B0486-793C-4FD2-8E20-C84E5D1AA785}"
-EndProject
+
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
