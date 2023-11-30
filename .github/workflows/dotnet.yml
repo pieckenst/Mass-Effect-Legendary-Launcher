@@ -25,4 +25,4 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     - name: Publish
-      run: dotnet publish MELE-launcher.sln -c Release -o release — nologo
+      run: dotnet publish MELE-launcher\MELE-launcher.csproj -c Release -o release — nologo
