@@ -6,8 +6,12 @@ name: .NET
 on:
   push:
     branches: [ "main" ]
+    tags:
+      - "v*.*.*"
   pull_request:
     branches: [ "main" ]
+    tags:
+      - "testbuild-*.*.*"
 
 jobs:
   build:
