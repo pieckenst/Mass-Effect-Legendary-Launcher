@@ -30,12 +30,21 @@ jobs:
       run: dotnet build  --configuration Release --no-restore
     - name: Publish
       run: dotnet publish --runtime win-x64 --configuration Release
-    
-    - name: 'Get Previous tag'
+   #▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼#
+    - name: Get previous tag
       id: previoustag
       uses: "WyriHaximus/github-action-get-previous-tag@v1"
       with:
           fallback: 0.3.0 # Optional fallback tag to use when no tag can be found
+      #▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲#
+    - name: Get seconds from previous tag to now
+      id: diff
+      shell: bash
+      env:
+          TIMESTAMP_TAG: ${{ steps.previoustag.outputs.timestamp }}
+      run: |
+          echo "::set-output name=timestamp-diff::$(expr $(printf '%(%s)T') - $TIMESTAMP_TAG)" 
+    
     - name: 'Get next minor version'
       id: semvers
       uses: "WyriHaximus/github-action-next-semvers@v1"
