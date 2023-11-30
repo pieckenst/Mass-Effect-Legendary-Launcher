@@ -27,7 +27,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --runtime win-x64 --configuration Release --no-restore
+      run: dotnet build  --configuration Release --no-restore
     - name: Publish
       run: dotnet publish --runtime win-x64 --configuration Release
     - name: Zip the Build
