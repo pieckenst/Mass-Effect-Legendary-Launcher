@@ -30,9 +30,8 @@ jobs:
       run: dotnet publish 
     - name: Upload release
       uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
       with:
           files: "MELE-launcher*"
       env:
           GITHUB_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
-          INPUT_TAG_NAME: "V-*.*.*"
+          tag_name: "V-*.*.*"
