@@ -28,6 +28,8 @@ jobs:
       run: dotnet build --no-restore
     - name: Publish
       run: dotnet publish 
+    - name: Zip the Build
+      run: zip -r "mele-launcher-bin-win.zip" ./MELE-launcher/bin/Release/net5.0/
     - name: 'Get Previous tag'
       id: previoustag
       uses: "WyriHaximus/github-action-get-previous-tag@v1"
@@ -51,7 +53,7 @@ jobs:
       # if: startsWith(github.ref, 'refs/tags/')
       with:
           tag_name: ${{ steps.semvers.outputs.patch }}
-          files: "MELE-launcher*"
+          files: "mele-launcher-bin-win.zip"
       env:
           GITHUB_TOKEN: "${{ secrets.WORKFLOW_TOKEN }}"
           
