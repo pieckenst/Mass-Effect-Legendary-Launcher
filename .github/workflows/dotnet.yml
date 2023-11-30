@@ -40,13 +40,8 @@ jobs:
           Release_tag=$(echo "$release_json" | jq -r '.[0].tag_name')
           echo "Release_tag: Latest Tag is : $Release_tag"
           echo ::set-output name=Release_tag::"$Release_tag"
-    
+          
     - name: 'Get next minor version'
-      id: semvers
-      uses: "WyriHaximus/github-action-next-semvers@v1"
-      with:
-          version: ${{ steps.releaseVersion.outputs.Release_tag }}
-    - name: Bumping Patch Index 
       id: bump_version_patch
       uses: christian-draeger/increment-semantic-version@1.0.2
       with:
