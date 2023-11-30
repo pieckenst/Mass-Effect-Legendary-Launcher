@@ -3,6 +3,9 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <RootNamespace>MELE_launcher</RootNamespace>
     <ApplicationIcon>MassEffect_LE_Icon_512px.ico</ApplicationIcon>
     <Description>Launcher for the Mass Effect Legendary Edition</Description>
