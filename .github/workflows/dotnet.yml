@@ -25,4 +25,10 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     - name: Publish
-      run: dotnet publish "$(SourceDirectory)\MELE-launcher\MELE-launcher.csproj" -c Release -o release — nologo
+      run: dotnet publish 
+    - name: Upload release
+      uses: softprops/action-gh-release@v1
+      with:
+          files: "MELE-launcher*"
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
