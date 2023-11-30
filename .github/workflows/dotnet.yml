@@ -40,8 +40,14 @@ jobs:
           Release_tag=$(echo "$release_json" | jq -r '.[0].tag_name')
           echo "Release_tag: Latest Tag is : $Release_tag"
           echo ::set-output name=Release_tag::"$Release_tag"
-          
     - name: 'Get next minor version'
+      id: bump_version_minor
+      if: contains(github.event.pull_request.title, 'minor')
+      uses: christian-draeger/increment-semantic-version@1.0.2
+      with:
+          current-version: ${{ steps.releaseVersion.outputs.Release_tag }}
+          version-fragment: 'feature'      
+    - name: 'Get next patch version'
       id: bump_version_patch
       uses: christian-draeger/increment-semantic-version@1.0.2
       with:
