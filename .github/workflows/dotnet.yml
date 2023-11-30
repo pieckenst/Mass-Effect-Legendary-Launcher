@@ -27,9 +27,9 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build --runtime win-x64 --configuration Release --no-restore
     - name: Publish
-      run: dotnet publish --configuration Release
+      run: dotnet publish --runtime win-x64 --configuration Release
     - name: Zip the Build
       run: zip -r "mele-launcher-bin-win.zip" ./MELE-launcher/bin/Release/net5.0/
     - name: 'Get Previous tag'
