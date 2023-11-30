@@ -50,7 +50,7 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.WORKFLOW_TOKEN }}"
     
     - name: Zip the Build
-      run: zip -r "mele-launcher-bin-win" + ${{ steps.semvers.outputs.patch }} + "zip" ./MELE-launcher/bin/Release/net5.0/    # this is kinda a hack and might not work lol
+      run: zip -r "mele-launcher-bin-win-output.zip" ./MELE-launcher/bin/Release/net5.0/win-x64/publish    # this is kinda a hack and might not work lol
     - name: Release
       uses: softprops/action-gh-release@v0.1.14
       # if: startsWith(github.ref, 'refs/tags/')
