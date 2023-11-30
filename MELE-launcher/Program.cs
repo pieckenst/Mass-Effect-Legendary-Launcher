@@ -22,7 +22,7 @@ namespace MELE_launcher
                 @"  | |__/ _` | || | ' \/ _| ' \/ -_) '_|                                                                               ",
                 @"  |____\__,_|\_,_|_||_\__|_||_\___|_|                                                                                 ",
             };
-            Console.WindowWidth = 200;
+            Console.WindowWidth = 250;
             Console.WriteLine("\n\n");
             
             
