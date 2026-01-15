@@ -36,8 +36,17 @@ jobs:
       run: |
           owner="pieckenst"
           repo="Mass-Effect-Legendary-Launcher"
-          release_json=$(curl https://api.github.com/repos/$owner/$repo/releases)
-          Release_tag=$(echo "$release_json" | jq -r '.[0].tag_name')
+          echo "Fetching releases from GitHub API..."
+          release_json=$(curl -s https://api.github.com/repos/$owner/$repo/releases)
+          echo "API Response (first 500 chars): $(echo "$release_json" | head -c 500)"
+          
+          Release_tag=$(echo "$release_json" | jq -r '.[0].tag_name // "0.3.6"')
+          
+          # If jq returns null or empty, use the latest known version
+          if [ "$Release_tag" = "null" ] || [ -z "$Release_tag" ]; then
+            Release_tag="0.3.6"
+          fi
+          
           echo "Release_tag: Latest Tag is : $Release_tag"
           echo "Release_tag=$Release_tag" >> $GITHUB_OUTPUT
     - name: 'Get next minor version'
@@ -49,12 +58,14 @@ jobs:
           version-fragment: 'feature'      
     - name: 'Get next patch version'
       id: bump_version_patch
+      if: github.ref == 'refs/heads/main'
       uses: christian-draeger/increment-semantic-version@1.1.0
       with:
           current-version: ${{ steps.releaseVersion.outputs.Release_tag }}
           version-fragment: 'bug'
     - name: 'Create new milestone'
       id: createmilestone
+      if: github.ref == 'refs/heads/main'
       uses: "WyriHaximus/github-action-create-milestone@v1"
       with:
           title: ${{ steps.bump_version_patch.outputs.next-version }}
@@ -62,10 +73,11 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.WORKFLOW_TOKEN }}"
     
     - name: '[Windows] Archive build'
+      if: github.ref == 'refs/heads/main'
       run: zip -r "mele-launcher-bin-win-output.zip" ./MELE-launcher/bin/Release/net6.0/win-x64/publish
     - name: Release
+      if: github.ref == 'refs/heads/main'
       uses: softprops/action-gh-release@v2
-      # if: startsWith(github.ref, 'refs/tags/')
       with:
           tag_name: ${{ steps.bump_version_patch.outputs.next-version }}
           body: "Automatic CI build - for changes please see commit history of the main branch"
