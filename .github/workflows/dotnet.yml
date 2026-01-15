@@ -36,15 +36,28 @@ jobs:
       run: |
           owner="pieckenst"
           repo="Mass-Effect-Legendary-Launcher"
-          echo "Fetching releases from GitHub API..."
-          release_json=$(curl -s https://api.github.com/repos/$owner/$repo/releases)
-          echo "API Response (first 500 chars): $(echo "$release_json" | head -c 500)"
+          echo "Fetching releases from GitHub API with authentication..."
           
-          Release_tag=$(echo "$release_json" | jq -r '.[0].tag_name // "0.3.6"')
+          # Use GITHUB_TOKEN for authenticated requests to avoid rate limits
+          release_json=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                              -H "Accept: application/vnd.github.v3+json" \
+                              "https://api.github.com/repos/$owner/$repo/releases")
           
-          # If jq returns null or empty, use the latest known version
-          if [ "$Release_tag" = "null" ] || [ -z "$Release_tag" ]; then
+          # Check if we got rate limited or other error
+          if echo "$release_json" | grep -q "rate limit exceeded\|API rate limit exceeded"; then
+            echo "Rate limit exceeded, using fallback version"
             Release_tag="0.3.6"
+          elif echo "$release_json" | grep -q "message.*Not Found"; then
+            echo "Repository not found or no releases, using fallback version"
+            Release_tag="0.3.6"
+          else
+            echo "API Response (first 200 chars): $(echo "$release_json" | head -c 200)"
+            Release_tag=$(echo "$release_json" | jq -r '.[0].tag_name // "0.3.6"')
+            
+            # If jq returns null or empty, use the latest known version
+            if [ "$Release_tag" = "null" ] || [ -z "$Release_tag" ]; then
+              Release_tag="0.3.6"
+            fi
           fi
           
           echo "Release_tag: Latest Tag is : $Release_tag"
