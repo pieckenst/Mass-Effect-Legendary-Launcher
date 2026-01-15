@@ -2,17 +2,27 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using MELE_launcher.Components;
 using MELE_launcher.Configuration;
 using MELE_launcher.Models;
 using MassEffectLauncher.Components;
 using MassEffectLauncher.Models;
 using Spectre.Console;
+using System.Threading.Tasks;
 
 namespace MELE_launcher
 {
 	class Program
 	{
+		// P/Invoke declarations for console allocation
+		[DllImport("kernel32.dll", SetLastError = true)]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		static extern bool AllocConsole();
+
+		[DllImport("kernel32.dll")]
+		static extern IntPtr GetConsoleWindow();
+
 		private static ConfigManager _configManager;
 		private static AdminElevator _adminElevator;
 		private static GameDetector _gameDetector;
@@ -23,6 +33,12 @@ namespace MELE_launcher
 
 		static void Main(string[] args)
 		{
+			// Ensure we have a console window (important for Windows Forms apps)
+			if (GetConsoleWindow() == IntPtr.Zero)
+			{
+				AllocConsole();
+			}
+
 			Console.Title = "Legendary Launcher";
             Console.OutputEncoding = System.Text.Encoding.Unicode;
 
@@ -66,11 +82,18 @@ namespace MELE_launcher
 		/// Parses command-line arguments and launches the specified game directly.
 		/// Format: -ME(1|2|3) -yes|-no LanguageCode [-silent] for Legendary Edition
 		///         -OLDME(1|2|3) [-silent] for Original Trilogy
+		///         -test-rad for testing RAD Video Tools downloader
 		/// </summary>
 		/// <param name="args">Command-line arguments.</param>
 		/// <returns>True if launch was successful, false otherwise.</returns>
 		private static bool ParseAndLaunchFromCommandLine(string[] args)
 		{
+			// Check for test commands first
+			if (args.Length > 0 && args[0].Equals("-test-rad", StringComparison.OrdinalIgnoreCase))
+			{
+				return RunTestCommands(args).GetAwaiter().GetResult();
+			}
+
 			bool silent = args.Any(a => a.Equals("-silent", StringComparison.OrdinalIgnoreCase));
 			GameType? gameType = null;
 			GameEdition? edition = null;
@@ -123,7 +146,7 @@ namespace MELE_launcher
 				if (!silent)
 				{
 					Console.WriteLine("Error: No valid game specified.");
-					Console.WriteLine("Usage for Legendary Edition: -ME(1|2|3) -yes|-no LanguageCode [-silent]");
+					Console.WriteLine("Usage for Legendary Edition: -ME(1|2|3) -yes|-no LanguageCode [-silent] [-nointro]");
 					Console.WriteLine("Usage for Original Trilogy: -OLDME(1|2|3) [-silent]");
 				}
 				return false;
@@ -212,7 +235,8 @@ namespace MELE_launcher
 				Locale = textLanguage,
 				VoiceLanguage = voiceLanguage,
 				ForceFeedback = forceFeedback,
-				Silent = silent
+				Silent = silent,
+				PlayIntro = !silent && !args.Any(a => a.Equals("-nointro", StringComparison.OrdinalIgnoreCase))
 			};
 
 			// Launch the game
@@ -625,6 +649,41 @@ namespace MELE_launcher
 			// Graceful exit
 			AnsiConsole.Clear();
 			AnsiConsole.MarkupLine("[cyan]Thank you for using Mass Effect Legendary Launcher![/]");
+		}
+
+		/// <summary>
+		/// Runs test commands for debugging and verification.
+		/// </summary>
+		/// <param name="args">Command-line arguments.</param>
+		/// <returns>True if tests completed successfully, false otherwise.</returns>
+		private static async Task<bool> RunTestCommands(string[] args)
+		{
+			try
+			{
+				Console.WriteLine("🧪 Running RAD Video Tools Downloader Tests...");
+				Console.WriteLine();
+
+				// Test RAD downloader
+				await TestRadDownloader.TestDownloadAsync();
+				Console.WriteLine();
+
+				// Test intro player
+				await TestRadDownloader.TestIntroPlayerAsync();
+				Console.WriteLine();
+
+				Console.WriteLine("✅ All tests completed!");
+				Console.WriteLine("Press any key to exit...");
+				Console.ReadKey(true);
+				
+				return true;
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"❌ Test failed with exception: {ex.Message}");
+				Console.WriteLine("Press any key to exit...");
+				Console.ReadKey(true);
+				return false;
+			}
 		}
 	}
 }

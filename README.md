@@ -7,6 +7,7 @@ A modern, feature-rich launcher for Mass Effect Legendary Edition and the Origin
 - **Automatic Game Detection**: Automatically scans for Mass Effect games on your system
 - **Separate Text and Voice Language Selection**: Choose different languages for subtitles and voice-overs
 - **Force Feedback Control**: Enable or disable controller force feedback
+- **BioWare Intro Video**: Plays the authentic BioWare logo intro before game launch (can be skipped with ESC)
 - **Command-Line Support**: Launch games directly without the interactive menu
 - **Admin Elevation**: Automatically handles games that require administrator privileges
 - **Interactive Terminal UI**: Beautiful, easy-to-navigate menu system using Spectre.Console
@@ -35,7 +36,7 @@ For direct game launching without the interactive menu, use command-line argumen
 #### Legendary Edition Games
 
 ```bash
-MassEffectLauncher.exe -ME(1|2|3) -yes|-no LanguageCode [-silent]
+MassEffectLauncher.exe -ME(1|2|3) -yes|-no LanguageCode [-silent] [-nointro]
 ```
 
 **Parameters:**
@@ -43,6 +44,7 @@ MassEffectLauncher.exe -ME(1|2|3) -yes|-no LanguageCode [-silent]
 - `-yes` or `-no`: Enable or disable force feedback
 - `LanguageCode`: Language code for text and voice-over (see Language Codes section)
 - `-silent`: Optional flag to suppress console output
+- `-nointro`: Optional flag to skip the BioWare intro video
 
 **Examples:**
 ```bash
@@ -52,8 +54,8 @@ MassEffectLauncher.exe -ME1 -yes RA
 # Launch ME2 with force feedback disabled, French text with English voice-over
 MassEffectLauncher.exe -ME2 -no FRE -silent
 
-# Launch ME3 with German voice-over
-MassEffectLauncher.exe -ME3 -no DEU
+# Launch ME3 with German voice-over, skip intro
+MassEffectLauncher.exe -ME3 -no DEU -nointro
 ```
 
 #### Original Trilogy Games

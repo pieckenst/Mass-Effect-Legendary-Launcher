@@ -25,5 +25,10 @@ namespace MELE_launcher.Models
         /// Gets or sets whether to launch the game in silent mode (no splash screens).
         /// </summary>
         public bool Silent { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether to play the BioWare intro video before launching the game.
+        /// </summary>
+        public bool PlayIntro { get; set; } = true;
     }
 }

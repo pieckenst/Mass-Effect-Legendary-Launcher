@@ -8,8 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **BioWare Intro Video**: Plays the authentic BioWare logo intro (BWLogo1.bik) before game launch
+  - Automatically detects intro video in Legendary Edition installations
+  - Fullscreen playback with ESC key to skip
+  - Can be disabled with `-nointro` command-line flag or in silent mode
+  - Only plays for Legendary Edition games (not Original Trilogy)
 - Command-line argument support for direct game launching without interactive menu
-  - Legendary Edition: `-ME(1|2|3) -yes|-no LanguageCode [-silent]`
+  - Legendary Edition: `-ME(1|2|3) -yes|-no LanguageCode [-silent] [-nointro]`
   - Original Trilogy: `-OLDME(1|2|3) [-silent]`
 - Silent mode flag (`-silent`) to suppress console output during command-line launches
 - Comprehensive language code mapping system supporting all BioWare locale codes

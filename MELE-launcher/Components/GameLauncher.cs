@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using MELE_launcher.Models;
 
 namespace MELE_launcher.Components
@@ -9,13 +10,22 @@ namespace MELE_launcher.Components
     /// </summary>
     public class GameLauncher
     {
+        private readonly IntroPlayer _introPlayer;
+
+        /// <summary>
+        /// Initializes a new instance of the GameLauncher class.
+        /// </summary>
+        public GameLauncher()
+        {
+            _introPlayer = new IntroPlayer();
+        }
         /// <summary>
         /// Launches a Mass Effect game with the specified options.
         /// </summary>
         /// <param name="game">The detected game to launch.</param>
         /// <param name="options">Launch options including locale and force feedback settings.</param>
         /// <returns>A LaunchResult indicating success or failure with error details.</returns>
-        public LaunchResult Launch(DetectedGame game, LaunchOptions options)
+        public async Task<LaunchResult> LaunchAsync(DetectedGame game, LaunchOptions options)
         {
             if (game == null)
             {
@@ -46,6 +56,16 @@ namespace MELE_launcher.Components
 
             try
             {
+                // Play BioWare intro if enabled and not in silent mode
+                if (options?.PlayIntro == true && options?.Silent != true && game.Edition == GameEdition.Legendary)
+                {
+                    await _introPlayer.PlayBioWareIntroAsync(game.Path, allowSkip: true);
+                }
+
+                // Ensure all video player processes are completely closed before launching game
+                // This prevents conflicts between video players and the game
+                await _introPlayer.EnsureVideoPlayersClosed();
+
                 string arguments = BuildArguments(game, options);
                 ProcessStartInfo startInfo = CreateStartInfo(game, arguments);
                 
@@ -102,6 +122,17 @@ namespace MELE_launcher.Components
                     ErrorMessage = $"Failed to launch game: {ex.Message}\n\nStack trace: {ex.StackTrace}"
                 };
             }
+        }
+
+        /// <summary>
+        /// Launches a Mass Effect game with the specified options (synchronous version).
+        /// </summary>
+        /// <param name="game">The detected game to launch.</param>
+        /// <param name="options">Launch options including locale and force feedback settings.</param>
+        /// <returns>A LaunchResult indicating success or failure with error details.</returns>
+        public LaunchResult Launch(DetectedGame game, LaunchOptions options)
+        {
+            return LaunchAsync(game, options).GetAwaiter().GetResult();
         }
 
         /// <summary>

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
@@ -11,11 +11,13 @@
     <Description>Launcher for the Mass Effect Legendary Edition</Description>
     <AssemblyName>MassEffectLauncher</AssemblyName>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Spectre.Console" Version="0.49.1" />
     <PackageReference Include="FsCheck" Version="2.16.6" />
+    <PackageReference Include="FFMpegCore" Version="5.0.2" />
   </ItemGroup>
 
 </Project>
