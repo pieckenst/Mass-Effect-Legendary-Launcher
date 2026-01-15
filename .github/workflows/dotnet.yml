@@ -84,7 +84,15 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.WORKFLOW_TOKEN }}"
     
     - name: '[Windows] Archive build'
-      run: zip -r "mele-launcher-bin-win-output.zip" ./MELE-launcher/bin/Release/net6.0/win-x64/publish
+      run: |
+        if [ -d "./MELE-launcher/bin/Release/net6.0-windows/win-x64/publish" ]; then
+          zip -r "mele-launcher-bin-win-output.zip" ./MELE-launcher/bin/Release/net6.0-windows/win-x64/publish
+        elif [ -d "./MELE-launcher/bin/Release/net6.0/win-x64/publish" ]; then
+          zip -r "mele-launcher-bin-win-output.zip" ./MELE-launcher/bin/Release/net6.0/win-x64/publish
+        else
+          echo "Error: Neither net6.0-windows nor net6.0 publish directory found"
+          exit 1
+        fi
     - name: Create Release
       run: |
           # Create the release using GitHub CLI
