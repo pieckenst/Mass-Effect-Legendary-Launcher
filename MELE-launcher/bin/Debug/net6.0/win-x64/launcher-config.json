@@ -1,0 +1,32 @@
+{
+  "Games": [
+    {
+      "Type": 0,
+      "Edition": 0,
+      "Path": "E:\\Mass Effect Legendary Edition",
+      "Locale": "ru",
+      "VoiceLanguage": "RU",
+      "ForceFeedback": false
+    },
+    {
+      "Type": 1,
+      "Edition": 0,
+      "Path": "E:\\Mass Effect Legendary Edition",
+      "Locale": "ru",
+      "VoiceLanguage": "INT",
+      "ForceFeedback": false
+    },
+    {
+      "Type": 2,
+      "Edition": 0,
+      "Path": "E:\\Mass Effect Legendary Edition",
+      "Locale": "ru",
+      "VoiceLanguage": "INT",
+      "ForceFeedback": false
+    }
+  ],
+  "DefaultLocale": "ru",
+  "DefaultVoiceLanguage": "INT",
+  "DefaultForceFeedback": false,
+  "LastScanDate": "2026-01-15T20:22:16.7316561+03:00"
+}

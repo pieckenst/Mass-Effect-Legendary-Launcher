@@ -1,0 +1,110 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "G:\\code\\melaunch\\Mass-Effect-Legendary-Launcher\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\code\\melaunch\\Mass-Effect-Legendary-Launcher\\MASSEFFECTLauncher-GUI\\MainWindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:MASSEFFECTLauncher-GUI\\MainWindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{298E6350-01F4-4898-ACD3-05FF12F1821C}|MELE-launcher\\MELE-launcher.csproj|g:\\code\\melaunch\\mass-effect-legendary-launcher\\mele-launcher\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{298E6350-01F4-4898-ACD3-05FF12F1821C}|MELE-launcher\\MELE-launcher.csproj|solutionrelative:mele-launcher\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\code\\melaunch\\Mass-Effect-Legendary-Launcher\\masseffectlauncher-gui\\properties\\resources.resx||{FF4D6ACA-9352-4A5F-821E-F4D6EBDCAB11}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:masseffectlauncher-gui\\properties\\resources.resx||{FF4D6ACA-9352-4A5F-821E-F4D6EBDCAB11}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\code\\melaunch\\Mass-Effect-Legendary-Launcher\\MASSEFFECTLauncher-GUI\\MASSEFFECTLauncher-GUI.csproj||{04B8AB82-A572-4FEF-95CE-5222444B6B64}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:MASSEFFECTLauncher-GUI\\MASSEFFECTLauncher-GUI.csproj||{04B8AB82-A572-4FEF-95CE-5222444B6B64}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|G:\\code\\melaunch\\Mass-Effect-Legendary-Launcher\\MASSEFFECTLauncher-GUI\\MainWindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:MASSEFFECTLauncher-GUI\\MainWindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 3,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:1:0:{e8b06f52-6d01-11d2-aa7d-00c04f990343}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{73068c07-fba1-453f-99ae-6edf972119b2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MainWindow.xaml.cs",
+              "DocumentMoniker": "G:\\code\\melaunch\\Mass-Effect-Legendary-Launcher\\MASSEFFECTLauncher-GUI\\MainWindow.xaml.cs",
+              "RelativeDocumentMoniker": "MASSEFFECTLauncher-GUI\\MainWindow.xaml.cs",
+              "ToolTip": "G:\\code\\melaunch\\Mass-Effect-Legendary-Launcher\\MASSEFFECTLauncher-GUI\\MainWindow.xaml.cs",
+              "RelativeToolTip": "MASSEFFECTLauncher-GUI\\MainWindow.xaml.cs",
+              "ViewState": "AgIAAB0AAAAAAAAAAAApwDEAAAAWAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-15T16:19:45.401Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Resources.resx",
+              "DocumentMoniker": "G:\\code\\melaunch\\Mass-Effect-Legendary-Launcher\\MASSEFFECTLauncher-GUI\\Properties\\Resources.resx",
+              "RelativeDocumentMoniker": "MASSEFFECTLauncher-GUI\\Properties\\Resources.resx",
+              "ToolTip": "G:\\code\\melaunch\\Mass-Effect-Legendary-Launcher\\MASSEFFECTLauncher-GUI\\Properties\\Resources.resx",
+              "RelativeToolTip": "MASSEFFECTLauncher-GUI\\Properties\\Resources.resx",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001005|",
+              "WhenOpened": "2026-01-15T16:19:45.752Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "MASSEFFECTLauncher-GUI.csproj",
+              "DocumentMoniker": "G:\\code\\melaunch\\Mass-Effect-Legendary-Launcher\\MASSEFFECTLauncher-GUI\\MASSEFFECTLauncher-GUI.csproj",
+              "RelativeDocumentMoniker": "MASSEFFECTLauncher-GUI\\MASSEFFECTLauncher-GUI.csproj",
+              "ToolTip": "G:\\code\\melaunch\\Mass-Effect-Legendary-Launcher\\MASSEFFECTLauncher-GUI\\MASSEFFECTLauncher-GUI.csproj",
+              "RelativeToolTip": "MASSEFFECTLauncher-GUI\\MASSEFFECTLauncher-GUI.csproj",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-01-15T16:19:45.761Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "MainWindow.xaml",
+              "DocumentMoniker": "G:\\code\\melaunch\\Mass-Effect-Legendary-Launcher\\MASSEFFECTLauncher-GUI\\MainWindow.xaml",
+              "RelativeDocumentMoniker": "MASSEFFECTLauncher-GUI\\MainWindow.xaml",
+              "ToolTip": "G:\\code\\melaunch\\Mass-Effect-Legendary-Launcher\\MASSEFFECTLauncher-GUI\\MainWindow.xaml",
+              "RelativeToolTip": "MASSEFFECTLauncher-GUI\\MainWindow.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-01-15T16:19:45.764Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Program.cs",
+              "DocumentMoniker": "G:\\code\\melaunch\\Mass-Effect-Legendary-Launcher\\MELE-launcher\\Program.cs",
+              "RelativeDocumentMoniker": "MELE-launcher\\Program.cs",
+              "ToolTip": "G:\\code\\melaunch\\Mass-Effect-Legendary-Launcher\\MELE-launcher\\Program.cs",
+              "RelativeToolTip": "MELE-launcher\\Program.cs",
+              "ViewState": "AQIAAJYAAAAAAAAAAAAAALMAAAAYAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-15T16:19:45.789Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
