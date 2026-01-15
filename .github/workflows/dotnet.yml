@@ -85,11 +85,13 @@ jobs:
     
     - name: '[Windows] Archive build'
       run: zip -r "mele-launcher-bin-win-output.zip" ./MELE-launcher/bin/Release/net6.0/win-x64/publish
-    - name: Release
-      uses: softprops/action-gh-release@v2
-      with:
-          tag_name: ${{ steps.bump_version_patch.outputs.next-version }}
-          body: "Automatic CI build - for changes please see commit history of the main branch"
-          files: "mele-launcher-bin-win-output.zip"
+    - name: Create Release
+      run: |
+          # Create the release using GitHub CLI
+          gh release create "${{ steps.bump_version_patch.outputs.next-version }}" \
+            --title "Release ${{ steps.bump_version_patch.outputs.next-version }}" \
+            --notes "Automatic CI build - for changes please see commit history of the main branch" \
+            --latest \
+            "mele-launcher-bin-win-output.zip"
       env:
-          GITHUB_TOKEN: "${{ secrets.WORKFLOW_TOKEN }}"
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
