@@ -9,6 +9,7 @@ namespace MassEffectLauncher.Models
         public Action OnSelect { get; set; }
         public bool IsEnabled { get; set; }
         public MenuItemType Type { get; set; }
+        public object Tag { get; set; }
 
         public MenuItem()
         {

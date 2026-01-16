@@ -5,22 +5,35 @@ using MassEffectLauncher.Models;
 using MELE_launcher.Models;
 using MELE_launcher.Configuration;
 using Spectre.Console;
+using Spectre.Console.Rendering;
 
 namespace MassEffectLauncher.Components
 {
     public class MenuSystem
     {
+        #region State
         private int _selectedIndex;
         private List<MenuItem> _menuItems;
         private MenuState _currentState;
+        #endregion
+
+        #region Configuration & Context
         private bool _isAdmin;
+        private LauncherConfig _config;
+        private ConfigManager _configManager;
+        #endregion
+
+        #region Callbacks
         private Action<string> _onLocaleChanged;
         private Action<bool> _onForceFeedbackChanged;
         private Action<bool> _onSkipIntroChanged;
         private Action _onRescanGames;
         private Action<string> _onManualPathAdded;
-        private LauncherConfig _config;
-        private ConfigManager _configManager;
+        #endregion
+
+        #region Visual Theme Management
+        private readonly Theme _theme = new Theme();
+        #endregion
 
         public MenuSystem()
         {
@@ -30,6 +43,8 @@ namespace MassEffectLauncher.Components
             _isAdmin = false;
         }
 
+        #region Initialization & Configuration
+        
         /// <summary>
         /// Initializes the menu system with configuration management.
         /// </summary>
@@ -39,7 +54,7 @@ namespace MassEffectLauncher.Components
             _configManager = configManager ?? throw new ArgumentNullException(nameof(configManager));
             _config = _configManager.Load();
 
-            // Wire up settings callbacks to persist changes
+            // Wire up settings callbacks to persist changes immediately
             SetLocaleChangedCallback(locale =>
             {
                 _config.DefaultLocale = locale;
@@ -62,10 +77,18 @@ namespace MassEffectLauncher.Components
         /// <summary>
         /// Gets the current configuration.
         /// </summary>
-        public LauncherConfig GetConfig()
+        public LauncherConfig GetConfig() => _config;
+
+        public void SetAdminStatus(bool isAdmin)
         {
-            return _config;
+            _isAdmin = isAdmin;
+            if (_isAdmin) _theme.SetAdminMode();
+            else _theme.SetStandardMode();
         }
+
+        #endregion
+
+        #region Data Helpers & Configuration Updates
 
         /// <summary>
         /// Updates the configuration with detected games and saves it.
@@ -143,173 +166,156 @@ namespace MassEffectLauncher.Components
             _configManager.Save(_config);
         }
 
+        #endregion
+
+        #region Menu Logic & Navigation
+
         public void SetMenuItems(List<MenuItem> items)
         {
             _menuItems = items;
             _selectedIndex = 0;
-            
-            // Ensure we start on a selectable item (not a separator)
-            if (_menuItems.Count > 0 && _menuItems[0].Type == MenuItemType.Separator)
-            {
-                // Find the first non-separator item
-                for (int i = 0; i < _menuItems.Count; i++)
-                {
-                    if (_menuItems[i].Type != MenuItemType.Separator)
-                    {
-                        _selectedIndex = i;
-                        break;
-                    }
-                }
-            }
+            EnsureValidSelection(1); // Move forward to find first selectable item
         }
 
-        public void SetAdminStatus(bool isAdmin)
-        {
-            _isAdmin = isAdmin;
-        }
+        public void SetMenuState(MenuState state) => _currentState = state;
 
-        public MenuItem GetSelectedItem()
-        {
-            if (_menuItems.Count == 0 || _selectedIndex < 0 || _selectedIndex >= _menuItems.Count)
-                return null;
-            
-            return _menuItems[_selectedIndex];
-        }
+        public MenuState GetCurrentState() => _currentState;
 
-        public MenuState GetCurrentState()
-        {
-            return _currentState;
-        }
-
-        public void SetMenuState(MenuState state)
-        {
-            _currentState = state;
-        }
+        public MenuItem GetSelectedItem() => 
+            (_selectedIndex >= 0 && _selectedIndex < _menuItems.Count) ? _menuItems[_selectedIndex] : null;
 
         public void HandleInput(ConsoleKeyInfo key)
         {
             switch (key.Key)
             {
-                case ConsoleKey.UpArrow:
-                    NavigateUp();
+                case ConsoleKey.UpArrow: 
+                    MoveSelection(-1); 
                     break;
                 
-                case ConsoleKey.DownArrow:
-                    NavigateDown();
+                case ConsoleKey.DownArrow: 
+                    MoveSelection(1); 
                     break;
                 
-                case ConsoleKey.Enter:
-                    SelectCurrentItem();
+                case ConsoleKey.Home: 
+                    _selectedIndex = 0; 
+                    EnsureValidSelection(1); 
                     break;
                 
-                case ConsoleKey.Escape:
-                    HandleEscape();
+                case ConsoleKey.End: 
+                    _selectedIndex = _menuItems.Count - 1; 
+                    EnsureValidSelection(-1); 
+                    break;
+                
+                case ConsoleKey.Enter: 
+                    ExecuteSelection(); 
+                    break;
+                
+                case ConsoleKey.Escape: 
+                    HandleBack(); 
                     break;
             }
         }
 
-        private void NavigateUp()
+        private void MoveSelection(int direction)
         {
-            if (_menuItems.Count == 0)
-                return;
+            if (_menuItems.Count == 0) return;
+
+            int originalIndex = _selectedIndex;
+            int newIndex = _selectedIndex;
 
             do
             {
-                _selectedIndex--;
+                newIndex += direction;
                 
-                // Wrap to last item if at first
-                if (_selectedIndex < 0)
+                // Wrap around
+                if (newIndex >= _menuItems.Count) newIndex = 0;
+                if (newIndex < 0) newIndex = _menuItems.Count - 1;
+
+                // Found a selectable item
+                if (_menuItems[newIndex].Type != MenuItemType.Separator)
                 {
-                    _selectedIndex = _menuItems.Count - 1;
+                    _selectedIndex = newIndex;
+                    return;
                 }
-            }
-            while (_menuItems[_selectedIndex].Type == MenuItemType.Separator && HasSelectableItems());
+            } 
+            while (newIndex != originalIndex);
         }
 
-        private void NavigateDown()
+        private void EnsureValidSelection(int direction)
         {
-            if (_menuItems.Count == 0)
-                return;
-
-            do
-            {
-                _selectedIndex++;
-                
-                // Wrap to first item if at last
-                if (_selectedIndex >= _menuItems.Count)
-                {
-                    _selectedIndex = 0;
-                }
-            }
-            while (_menuItems[_selectedIndex].Type == MenuItemType.Separator && HasSelectableItems());
-        }
-
-        private bool HasSelectableItems()
-        {
-            return _menuItems.Any(m => m.Type != MenuItemType.Separator);
-        }
-
-        private void SelectCurrentItem()
-        {
-            var selectedItem = GetSelectedItem();
+            if (_menuItems.Count == 0) return;
             
-            if (selectedItem != null && selectedItem.IsEnabled && selectedItem.OnSelect != null)
+            if (_menuItems[_selectedIndex].Type == MenuItemType.Separator)
             {
-                selectedItem.OnSelect();
+                MoveSelection(direction);
             }
         }
 
-        private void HandleEscape()
+        private void ExecuteSelection()
         {
-            // Navigate back to previous menu state or signal exit
-            switch (_currentState)
-            {
-                case MenuState.GameOptions:
-                case MenuState.Settings:
-                case MenuState.Confirmation:
-                    _currentState = MenuState.Main;
-                    break;
-                
-                case MenuState.Main:
-                    // Signal to exit application (handled by caller)
-                    break;
-            }
+            var item = GetSelectedItem();
+            if (item != null && item.IsEnabled && item.OnSelect != null) 
+                item.OnSelect();
         }
+
+        private void HandleBack()
+        {
+            if (_currentState != MenuState.Main) 
+                _currentState = MenuState.Main;
+        }
+
+        #endregion
+
+        #region Render Engine (Dashboard Layout)
 
         public void Render()
         {
+            // Root Layout
+            var rootLayout = new Layout("Root")
+                .SplitRows(
+                    new Layout("Header").Size(4),
+                    new Layout("Body"),
+                    new Layout("Footer").Size(3)
+                );
+
+            rootLayout["Header"].Update(RenderHeader());
+            rootLayout["Body"].Update(RenderDashboardBody());
+            rootLayout["Footer"].Update(RenderStatusBar());
+
             AnsiConsole.Clear();
-            RenderHeader();
-            RenderMenu();
-            RenderStatusBar();
+            AnsiConsole.Write(rootLayout);
         }
 
-        private void RenderHeader()
+        private IRenderable RenderHeader()
         {
-            var panel = new Panel(
-                new FigletText("MASS EFFECT")
-                    .Centered()
-                    .Color(Color.Red))
-            {
-                Border = BoxBorder.Double,
-                BorderStyle = new Style(Color.Red)
-            };
+            var grid = new Grid();
+            grid.AddColumn(new GridColumn().NoWrap());
+            grid.AddColumn(new GridColumn().RightAligned());
 
-            AnsiConsole.Write(panel);
-            
-            AnsiConsole.MarkupLine("[dim]LEGENDARY LAUNCHER v2.0[/]");
-            AnsiConsole.WriteLine();
+            var textTitle = new Markup($"[bold {_theme.AccentName}]MASS EFFECT[/] [white]LEGENDARY LAUNCHER[/]");
+            var subTitle = new Markup($"[dim]SYSTEMS ALLIANCE TERMINAL // V2.1.0[/]");
+            var userInfo = new Markup($"[dim]USER: {Environment.UserName.ToUpper()}[/]\n[{_theme.SecondaryName}]HOST: {Environment.MachineName}[/]");
+
+            grid.AddRow(textTitle, userInfo);
+            grid.AddRow(subTitle, new Text(""));
+
+            return new Panel(grid) 
+            { 
+                Border = BoxBorder.None, 
+                Padding = new Padding(1, 0, 1, 0) 
+            };
         }
 
-        private void RenderMenu()
+        private IRenderable RenderDashboardBody()
         {
-            var table = new Table()
-            {
-                Border = TableBorder.Rounded,
-                BorderStyle = new Style(Color.Aqua)
-            };
+            var grid = new Grid();
+            grid.AddColumn(new GridColumn().Width(40)); // Navigation
+            grid.AddColumn(new GridColumn().Padding(2, 0, 0, 0)); // Context
 
-            table.AddColumn(new TableColumn("").Width(60));
+            // Panel 1: Menu List
+            var menuTable = new Table().NoBorder().HideHeaders().Expand();
+            menuTable.AddColumn("State");
+            menuTable.AddColumn("Title");
 
             for (int i = 0; i < _menuItems.Count; i++)
             {
@@ -317,111 +323,206 @@ namespace MassEffectLauncher.Components
                 
                 if (item.Type == MenuItemType.Separator)
                 {
-                    table.AddRow(new Rule()
-                    {
-                        Style = new Style(Color.Grey)
-                    });
+                    menuTable.AddRow(new Markup(""), new Rule { Style = new Style(_theme.Muted) });
                     continue;
                 }
 
-                string prefix = i == _selectedIndex ? "[cyan]►[/] " : "  ";
-                string title = item.Title;
+                bool isSelected = (i == _selectedIndex);
                 
-                if (!item.IsEnabled)
+                if (isSelected)
                 {
-                    title = $"[dim]{title}[/]";
-                }
-                else if (i == _selectedIndex)
-                {
-                    title = $"[bold cyan]{title}[/]";
+                    menuTable.AddRow(
+                        new Markup($"[{_theme.HighlightName}]▌[/]"), 
+                        new Markup($"[black on {_theme.HighlightName}] {item.Title} [/]")
+                    );
                 }
                 else
                 {
-                    title = $"[white]{title}[/]";
+                    string style = item.IsEnabled ? "white" : "grey";
+                    menuTable.AddRow(
+                        new Markup(" "), 
+                        new Markup($"[{style}]{item.Title}[/]")
+                    );
                 }
-
-                table.AddRow(prefix + title);
             }
 
-            var menuPanel = new Panel(table)
+            var leftPanel = new Panel(menuTable)
             {
-                Header = new PanelHeader("[bold]Select an option[/]"),
-                Border = BoxBorder.Double,
-                BorderStyle = new Style(Color.Aqua)
+                Border = BoxBorder.Rounded,
+                BorderStyle = new Style(_theme.Border),
+                Header = new PanelHeader($" [bold]{GetMenuTitle()}[/] "),
+                Padding = new Padding(1, 1, 1, 1),
+                Expand = true
             };
 
-            AnsiConsole.Write(menuPanel);
-            AnsiConsole.WriteLine();
+            // Panel 2: Context Details
+            grid.AddRow(leftPanel, RenderContextPanel());
+
+            return grid;
         }
 
-        private void RenderStatusBar()
+        private string GetMenuTitle() => _currentState switch
         {
-            var statusItems = new List<string>();
+            MenuState.GameOptions => "TACTICAL",
+            MenuState.Settings => "CONFIG",
+            _ => "MISSIONS"
+        };
 
-            // Admin status
-            if (_isAdmin)
+        private IRenderable RenderContextPanel()
+        {
+            var selected = GetSelectedItem();
+            if (selected == null) return new Panel("");
+
+            var content = new List<IRenderable>();
+
+            // Header Art Code
+            var headerText = GetContextCode(selected);
+            content.Add(new FigletText(headerText).Color(_theme.Muted));
+
+            // Description
+            var rule = new Rule($"[{_theme.SecondaryName}]{selected.Title}[/]");
+            rule.Justification = Justify.Left;
+            content.Add(rule);
+            content.Add(new Text(""));
+            content.Add(new Markup($"[white]{selected.Description}[/]\n"));
+
+            // Rich Details (Tagging)
+            if (selected.Tag is DetectedGame game) 
+                RenderGameDetails(game, content);
+            else if (selected.Type == MenuItemType.Setting) 
+                RenderSettingDetails(selected, content);
+
+            return new Panel(new Rows(content))
             {
-                statusItems.Add("[green]Admin Mode[/]");
-            }
-            else
-            {
-                statusItems.Add("[yellow]Standard Mode[/]");
-            }
-
-            // Game count
-            int gameCount = _menuItems.Count(m => m.Type == MenuItemType.Game);
-            statusItems.Add($"[cyan]{gameCount} Games Detected[/]");
-
-            // Keyboard hints
-            statusItems.Add("[dim]↑↓ Navigate[/]");
-            statusItems.Add("[dim]Enter Select[/]");
-            statusItems.Add("[dim]Esc Back[/]");
-
-            var statusBar = string.Join(" [dim]│[/] ", statusItems);
-
-            var statusPanel = new Panel(statusBar)
-            {
-                Border = BoxBorder.Heavy,
-                BorderStyle = new Style(Color.Grey)
+                Border = BoxBorder.Rounded,
+                BorderStyle = new Style(_theme.Border),
+                Header = new PanelHeader(" [bold]INTEL[/] "),
+                Padding = new Padding(2, 1, 2, 1),
+                Expand = true
             };
-
-            AnsiConsole.Write(statusPanel);
         }
+
+        private void RenderGameDetails(DetectedGame game, List<IRenderable> content)
+        {
+            content.Add(new Text(""));
+            
+            var table = new Table().NoBorder().HideHeaders();
+            table.AddColumn("Key");
+            table.AddColumn("Value");
+
+            string statusColor = game.IsValid ? "green" : "red";
+            string statusText = game.IsValid ? "READY" : "INVALID";
+            
+            table.AddRow(new Markup("[dim]STATUS:[/]"), new Markup($"[{statusColor}]{statusText}[/]"));
+            table.AddRow(new Markup("[dim]PATH:[/]"), new Text(TruncatePath(game.Path)));
+
+            // Config Lookup for live preview
+            var gameConfig = _config?.Games.FirstOrDefault(g => g.Type == game.Type && g.Edition == game.Edition);
+            
+            if (gameConfig != null)
+            {
+                var textLang = LocaleMapper.GetLanguageOption(gameConfig.Locale).DisplayName;
+                var voiceLang = LocaleMapper.GetLanguageOption(gameConfig.VoiceLanguage).DisplayName;
+                var hasNativeVO = LocaleMapper.HasNativeVoiceOver(gameConfig.VoiceLanguage, game.Type);
+                
+                table.AddRow(new Markup("[dim]TEXT:[/]"), new Markup($"[cyan]{textLang}[/]"));
+                table.AddRow(new Markup("[dim]AUDIO:[/]"), new Markup($"[cyan]{voiceLang}[/]"));
+                table.AddRow(new Markup("[dim]VO TYPE:[/]"), new Markup(hasNativeVO ? "[green]Native[/]" : "[yellow]English Dub[/]"));
+            }
+
+            content.Add(table);
+        }
+
+        private void RenderSettingDetails(MenuItem item, List<IRenderable> content)
+        {
+            content.Add(new Text(""));
+            content.Add(new Markup("[dim]Select to modify this configuration value.[/]"));
+        }
+
+        private string TruncatePath(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return "";
+            if (path.Length > 40) return path.Substring(0, 15) + "..." + path.Substring(path.Length - 20);
+            return path;
+        }
+
+        private string GetContextCode(MenuItem item)
+        {
+            if (item.Tag is DetectedGame dg) return $"ME {(int)dg.Type + 1}";
+            if (item.Title.Contains("Settings")) return "SYS";
+            if (item.Title.Contains("Exit")) return "OFF";
+            return "CMD";
+        }
+
+        private IRenderable RenderStatusBar()
+        {
+            var table = new Table().NoBorder().HideHeaders().Expand();
+            table.AddColumn("Info");
+            table.AddColumn(new TableColumn("Keys").RightAligned());
+
+            string statusBadge = _isAdmin 
+                ? "[black on red] ADMINISTRATOR MODE [/]" 
+                : "[black on orange1] STANDARD USER MODE [/]";
+            
+            string keys = "[dim]↑/↓[/] [cyan]Nav[/]  [dim]HOME/END[/] [cyan]Jump[/]  [dim]RET[/] [cyan]Sel[/]  [dim]ESC[/] [cyan]Back[/]";
+
+            table.AddRow(new Markup(statusBadge), new Markup(keys));
+
+            return new Panel(table) 
+            { 
+                Border = BoxBorder.None, 
+                Padding = new Padding(1, 1, 1, 0) 
+            };
+        }
+
+        #endregion
+
+        #region Actions & Popups (Functionality Restored)
 
         public void ShowMessage(string message, MessageType type)
         {
             var color = type switch
             {
                 MessageType.Success => Color.Green,
-                MessageType.Warning => Color.Yellow,
+                MessageType.Warning => Color.Orange1,
                 MessageType.Error => Color.Red,
-                MessageType.Info => Color.Aqua,
-                _ => Color.White
+                _ => Color.Cyan1
             };
 
-            var icon = type switch
+            var box = new Panel(new Markup($"[{color}]{message}[/]"))
             {
-                MessageType.Success => "✓",
-                MessageType.Warning => "⚠",
-                MessageType.Error => "✕",
-                MessageType.Info => "ℹ",
-                _ => "•"
+                Border = BoxBorder.Heavy,
+                BorderStyle = new Style(color),
+                Header = new PanelHeader($"[bold]{type.ToString().ToUpper()}[/]"),
+                Padding = new Padding(2, 1, 2, 1)
             };
 
-            var markup = $"[{color}]{icon} {message}[/]";
-
-            var panel = new Panel(markup)
-            {
-                Border = BoxBorder.Rounded,
-                BorderStyle = new Style(color)
-            };
-
-            AnsiConsole.Write(panel);
-            AnsiConsole.WriteLine();
-            
-            // Pause to let user read the message
+            AnsiConsole.Clear();
+            AnsiConsole.Write(new Padder(box, new Padding(4)));
             AnsiConsole.MarkupLine("[dim]Press any key to continue...[/]");
             Console.ReadKey(true);
+        }
+
+        public bool ShowConfirmation(string message)
+        {
+            AnsiConsole.Clear();
+            
+            var panel = new Panel(new Markup($"[orange1 bold]{message}[/]"))
+            {
+                Border = BoxBorder.Double,
+                BorderStyle = new Style(Color.Orange1),
+                Header = new PanelHeader(" [bold]CONFIRM ACTION[/] "),
+                Padding = new Padding(2, 1, 2, 1)
+            };
+
+            AnsiConsole.Write(new Padder(panel, new Padding(4)));
+
+            var selection = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .AddChoices("Yes", "No")
+                    .HighlightStyle(new Style(Color.Black, Color.Orange1)));
+
+            return selection == "Yes";
         }
 
         public void ShowProgress(string task, Action action)
@@ -429,72 +530,41 @@ namespace MassEffectLauncher.Components
             AnsiConsole.Status()
                 .Spinner(Spinner.Known.Dots)
                 .SpinnerStyle(Style.Parse("cyan"))
-                .Start(task, ctx =>
-                {
-                    action();
-                });
+                .Start($" [cyan]{task}[/]", ctx => action());
         }
 
-        public bool ShowConfirmation(string message)
-        {
-            var panel = new Panel($"[yellow]❓ {message}[/]")
-            {
-                Border = BoxBorder.Rounded,
-                BorderStyle = new Style(Color.Yellow),
-                Header = new PanelHeader("[bold]Confirmation[/]")
-            };
+        #endregion
 
-            AnsiConsole.Write(panel);
-            AnsiConsole.WriteLine();
-            
-            var response = AnsiConsole.Prompt(
-                new SelectionPrompt<string>()
-                    .Title("Select your choice:")
-                    .AddChoices(new[] { "Yes", "No" })
-                    .HighlightStyle(new Style(Color.Aqua)));
-
-            return response == "Yes";
-        }
+        #region Callback Registration
 
         /// <summary>
         /// Sets the callback for when locale is changed in settings.
         /// </summary>
-        public void SetLocaleChangedCallback(Action<string> callback)
-        {
-            _onLocaleChanged = callback;
-        }
+        public void SetLocaleChangedCallback(Action<string> callback) => _onLocaleChanged = callback;
 
         /// <summary>
         /// Sets the callback for when force feedback is changed in settings.
         /// </summary>
-        public void SetForceFeedbackChangedCallback(Action<bool> callback)
-        {
-            _onForceFeedbackChanged = callback;
-        }
+        public void SetForceFeedbackChangedCallback(Action<bool> callback) => _onForceFeedbackChanged = callback;
 
         /// <summary>
         /// Sets the callback for when skip intro is changed in settings.
         /// </summary>
-        public void SetSkipIntroChangedCallback(Action<bool> callback)
-        {
-            _onSkipIntroChanged = callback;
-        }
+        public void SetSkipIntroChangedCallback(Action<bool> callback) => _onSkipIntroChanged = callback;
 
         /// <summary>
         /// Sets the callback for when rescan games is triggered.
         /// </summary>
-        public void SetRescanGamesCallback(Action callback)
-        {
-            _onRescanGames = callback;
-        }
+        public void SetRescanGamesCallback(Action callback) => _onRescanGames = callback;
 
         /// <summary>
         /// Sets the callback for when a manual game path is added.
         /// </summary>
-        public void SetManualPathAddedCallback(Action<string> callback)
-        {
-            _onManualPathAdded = callback;
-        }
+        public void SetManualPathAddedCallback(Action<string> callback) => _onManualPathAdded = callback;
+
+        #endregion
+
+        #region Menu Builders
 
         /// <summary>
         /// Builds the settings menu with all available options using current config.
@@ -532,7 +602,7 @@ namespace MassEffectLauncher.Components
             // Force feedback toggle
             menuItems.Add(new MenuItem
             {
-                Title = $"Default Force Feedback: {(currentForceFeedback ? "Enabled" : "Disabled")}",
+                Title = $"Default Rumble: {(currentForceFeedback ? "ON" : "OFF")}",
                 Description = "Toggle controller force feedback",
                 Type = MenuItemType.Setting,
                 IsEnabled = true,
@@ -542,8 +612,8 @@ namespace MassEffectLauncher.Components
             // Skip intro toggle
             menuItems.Add(new MenuItem
             {
-                Title = $"Skip BioWare Intro: {(currentSkipIntro ? "Enabled" : "Disabled")}",
-                Description = "Skip the BioWare intro video when launching games",
+                Title = $"Skip BioWare Intro: {(currentSkipIntro ? "ON" : "OFF")}",
+                Description = "Skip startup videos",
                 Type = MenuItemType.Setting,
                 IsEnabled = true,
                 OnSelect = () => ToggleSkipIntro(currentSkipIntro)
@@ -560,8 +630,8 @@ namespace MassEffectLauncher.Components
             // Rescan for games
             menuItems.Add(new MenuItem
             {
-                Title = "⟳ Rescan for Games",
-                Description = "Search for Mass Effect installations",
+                Title = "Rescan for Games",
+                Description = "Search detection paths",
                 Type = MenuItemType.Action,
                 IsEnabled = true,
                 OnSelect = () => TriggerRescan()
@@ -570,8 +640,8 @@ namespace MassEffectLauncher.Components
             // Manually add game path
             menuItems.Add(new MenuItem
             {
-                Title = "+ Add Game Path Manually",
-                Description = "Specify a game installation path",
+                Title = "Add Game Path Manually",
+                Description = "Specify game folder",
                 Type = MenuItemType.Action,
                 IsEnabled = true,
                 OnSelect = () => ShowManualPathInput()
@@ -588,98 +658,14 @@ namespace MassEffectLauncher.Components
             // Back to main menu
             menuItems.Add(new MenuItem
             {
-                Title = "← Back to Main Menu",
-                Description = "Return to the main menu",
+                Title = "Back to Main Menu",
+                Description = "Return",
                 Type = MenuItemType.Action,
                 IsEnabled = true,
                 OnSelect = () => _currentState = MenuState.Main
             });
 
             return menuItems;
-        }
-
-        /// <summary>
-        /// Shows locale selection prompt and triggers callback.
-        /// </summary>
-        private void ShowLocaleSelection(string currentLocale)
-        {
-            AnsiConsole.Clear();
-            
-            // Build display choices from available languages
-            var choices = LocaleMapper.AvailableLanguages
-                .Select(lang => lang.GetDisplayString())
-                .ToList();
-
-            var selectedDisplay = AnsiConsole.Prompt(
-                new SelectionPrompt<string>()
-                    .Title("[cyan]Select default locale:[/]")
-                    .AddChoices(choices)
-                    .HighlightStyle(new Style(Color.Aqua)));
-
-            // Find the selected language option
-            var selectedLanguage = LocaleMapper.AvailableLanguages
-                .FirstOrDefault(lang => lang.GetDisplayString() == selectedDisplay);
-
-            if (selectedLanguage != null)
-            {
-                _onLocaleChanged?.Invoke(selectedLanguage.Code);
-                ShowMessage($"Default locale changed to: {selectedLanguage.DisplayName}", MessageType.Success);
-            }
-        }
-
-        /// <summary>
-        /// Toggles force feedback setting and triggers callback.
-        /// </summary>
-        private void ToggleForceFeedback(bool currentValue)
-        {
-            var newValue = !currentValue;
-            _onForceFeedbackChanged?.Invoke(newValue);
-            
-            ShowMessage($"Default force feedback {(newValue ? "enabled" : "disabled")}", MessageType.Success);
-        }
-
-        /// <summary>
-        /// Toggles skip intro setting and triggers callback.
-        /// </summary>
-        private void ToggleSkipIntro(bool currentValue)
-        {
-            var newValue = !currentValue;
-            _onSkipIntroChanged?.Invoke(newValue);
-            
-            ShowMessage($"Skip BioWare intro {(newValue ? "enabled" : "disabled")}", MessageType.Success);
-        }
-
-        /// <summary>
-        /// Triggers the rescan games callback.
-        /// </summary>
-        private void TriggerRescan()
-        {
-            if (ShowConfirmation("Rescan for Mass Effect game installations?"))
-            {
-                _onRescanGames?.Invoke();
-            }
-        }
-
-        /// <summary>
-        /// Shows manual path input prompt and triggers callback.
-        /// </summary>
-        private void ShowManualPathInput()
-        {
-            AnsiConsole.Clear();
-            
-            var path = AnsiConsole.Prompt(
-                new TextPrompt<string>("[cyan]Enter the game installation path:[/]")
-                    .PromptStyle("cyan")
-                    .AllowEmpty());
-
-            if (!string.IsNullOrWhiteSpace(path))
-            {
-                _onManualPathAdded?.Invoke(path);
-            }
-            else
-            {
-                ShowMessage("No path entered. Operation cancelled.", MessageType.Warning);
-            }
         }
 
         /// <summary>
@@ -696,117 +682,188 @@ namespace MassEffectLauncher.Components
                 throw new ArgumentNullException(nameof(game));
             }
 
-            var menuItems = new List<MenuItem>();
+            var list = new List<MenuItem>();
 
             // Get the game config from saved settings, or use defaults
             var gameConfig = _config?.Games.FirstOrDefault(g => 
                 g.Type == game.Type && g.Edition == game.Edition);
 
-            string currentLocale = gameConfig?.Locale ?? _config?.DefaultLocale ?? "INT";
-            string currentVoiceLanguage = gameConfig?.VoiceLanguage ?? _config?.DefaultVoiceLanguage ?? "INT";
-            bool currentForceFeedback = gameConfig?.ForceFeedback ?? _config?.DefaultForceFeedback ?? false;
+            string loc = gameConfig?.Locale ?? _config?.DefaultLocale ?? "INT";
+            string vo = gameConfig?.VoiceLanguage ?? _config?.DefaultVoiceLanguage ?? "INT";
+            bool ff = gameConfig?.ForceFeedback ?? _config?.DefaultForceFeedback ?? false;
 
-            // Display game title
-            menuItems.Add(new MenuItem
-            {
-                Title = $"[bold cyan]{game.Name}[/]",
-                Description = game.Path,
-                Type = MenuItemType.Separator,
-                IsEnabled = false
+            // Title Header (Tag is set to game so Context Panel renders details!)
+            list.Add(new MenuItem 
+            { 
+                Title = game.Name, 
+                Description = game.Path, 
+                Type = MenuItemType.Separator, 
+                Tag = game 
             });
 
             // Only show locale and force feedback options for Legendary Edition games
             if (game.Edition == GameEdition.Legendary)
             {
                 // Text/Subtitle language selection
-                var textLangName = LocaleMapper.GetLanguageOption(currentLocale).DisplayName;
-                menuItems.Add(new MenuItem
-                {
-                    Title = $"Text Language: {textLangName}",
-                    Description = "Language for subtitles and menus",
-                    Type = MenuItemType.Setting,
+                var textLangName = LocaleMapper.GetLanguageOption(loc).DisplayName;
+                list.Add(new MenuItem 
+                { 
+                    Title = $"Text Language: {textLangName}", 
+                    Description = "Subtitle/UI Language", 
+                    Type = MenuItemType.Setting, 
+                    Tag = game,
                     IsEnabled = true,
-                    OnSelect = () => ShowGameTextLanguageSelection(game, currentLocale)
+                    OnSelect = () => ShowGameTextLanguageSelection(game, loc)
                 });
 
-                // Voice-over language selection
-                var voiceLangName = LocaleMapper.GetLanguageOption(currentVoiceLanguage).DisplayName;
-                var hasNativeVO = LocaleMapper.HasNativeVoiceOver(currentVoiceLanguage, game.Type);
+                // Voice-over language selection - RESTORED: Dynamic description based on native voice support
+                var voiceLangName = LocaleMapper.GetLanguageOption(vo).DisplayName;
+                var hasNativeVO = LocaleMapper.HasNativeVoiceOver(vo, game.Type);
                 var voiceDesc = hasNativeVO ? "Native voice-over" : "English voice-over";
                 
-                menuItems.Add(new MenuItem
-                {
-                    Title = $"Voice Language: {voiceLangName}",
-                    Description = voiceDesc,
-                    Type = MenuItemType.Setting,
+                list.Add(new MenuItem 
+                { 
+                    Title = $"Voice Language: {voiceLangName}", 
+                    Description = voiceDesc, 
+                    Type = MenuItemType.Setting, 
+                    Tag = game,
                     IsEnabled = true,
-                    OnSelect = () => ShowGameVoiceLanguageSelection(game, currentVoiceLanguage)
+                    OnSelect = () => ShowGameVoiceLanguageSelection(game, vo)
                 });
 
                 // Force feedback toggle
-                menuItems.Add(new MenuItem
-                {
-                    Title = $"Force Feedback: {(currentForceFeedback ? "Enabled" : "Disabled")}",
-                    Description = "Toggle controller force feedback",
-                    Type = MenuItemType.Setting,
+                list.Add(new MenuItem 
+                { 
+                    Title = $"Force Feedback: {(ff ? "ON" : "OFF")}", 
+                    Description = "Controller Vibration", 
+                    Type = MenuItemType.Setting, 
+                    Tag = game,
                     IsEnabled = true,
-                    OnSelect = () => ToggleGameForceFeedback(game, currentForceFeedback)
+                    OnSelect = () => ToggleGameForceFeedback(game, ff)
                 });
 
                 // Separator
-                menuItems.Add(new MenuItem
-                {
-                    Title = "",
-                    Type = MenuItemType.Separator,
-                    IsEnabled = false
+                list.Add(new MenuItem 
+                { 
+                    Type = MenuItemType.Separator 
                 });
             }
 
             // Launch button
-            menuItems.Add(new MenuItem
-            {
-                Title = "▶ Launch Game",
-                Description = "Start the game with selected options",
+            list.Add(new MenuItem 
+            { 
+                Title = "LAUNCH GAME", 
+                Description = "Execute with current settings",
                 Type = MenuItemType.Action,
+                Tag = game,
                 IsEnabled = true,
                 OnSelect = () => 
                 {
-                    // Get the latest settings before launching
-                    var config = _config?.Games.FirstOrDefault(g => 
-                        g.Type == game.Type && g.Edition == game.Edition);
-                    
-                    var launchOptions = new LaunchOptions
+                    var finalConfig = _config?.Games.FirstOrDefault(g => g.Type == game.Type && g.Edition == game.Edition);
+                    onLaunch(new LaunchOptions 
                     {
-                        Locale = config?.Locale ?? _config?.DefaultLocale ?? "INT",
-                        VoiceLanguage = config?.VoiceLanguage ?? _config?.DefaultVoiceLanguage ?? "INT",
-                        ForceFeedback = config?.ForceFeedback ?? _config?.DefaultForceFeedback ?? false,
-                        Silent = false,
-                        PlayIntro = !(_config?.DefaultSkipIntro ?? true)
-                    };
-                    
-                    onLaunch?.Invoke(launchOptions);
+                        Locale = finalConfig?.Locale ?? loc,
+                        VoiceLanguage = finalConfig?.VoiceLanguage ?? vo,
+                        ForceFeedback = finalConfig?.ForceFeedback ?? ff,
+                        PlayIntro = !(_config?.DefaultSkipIntro ?? true),
+                        Silent = false
+                    });
                 }
             });
 
             // Separator
-            menuItems.Add(new MenuItem
-            {
-                Title = "",
-                Type = MenuItemType.Separator,
-                IsEnabled = false
+            list.Add(new MenuItem 
+            { 
+                Type = MenuItemType.Separator 
             });
 
             // Back to main menu
-            menuItems.Add(new MenuItem
-            {
-                Title = "← Back to Main Menu",
-                Description = "Return to the main menu",
-                Type = MenuItemType.Action,
+            list.Add(new MenuItem 
+            { 
+                Title = "Back to Main Menu", 
+                Type = MenuItemType.Action, 
                 IsEnabled = true,
-                OnSelect = () => _currentState = MenuState.Main
+                OnSelect = () => _currentState = MenuState.Main 
             });
 
-            return menuItems;
+            return list;
+        }
+
+        #endregion
+
+        #region Helper Logic (Restored Callbacks & Success Messages)
+
+        /// <summary>
+        /// Shows locale selection prompt and triggers callback.
+        /// </summary>
+        private void ShowLocaleSelection(string current) 
+        {
+            AnsiConsole.Clear();
+            
+            var choices = LocaleMapper.AvailableLanguages
+                .Select(lang => lang.GetDisplayString())
+                .ToList();
+
+            var selectedDisplay = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("[cyan]Select default locale:[/]")
+                    .AddChoices(choices)
+                    .HighlightStyle(new Style(Color.Black, Color.Cyan1)));
+
+            var lang = LocaleMapper.AvailableLanguages
+                .FirstOrDefault(l => l.GetDisplayString() == selectedDisplay);
+
+            if (lang != null) 
+            {
+                _onLocaleChanged?.Invoke(lang.Code);
+                ShowMessage($"Default locale changed to: {lang.DisplayName}", MessageType.Success);
+            }
+        }
+
+        /// <summary>
+        /// Toggles force feedback setting and triggers callback.
+        /// </summary>
+        private void ToggleForceFeedback(bool current) 
+        {
+            bool newValue = !current;
+            _onForceFeedbackChanged?.Invoke(newValue);
+            ShowMessage($"Default force feedback {(newValue ? "enabled" : "disabled")}", MessageType.Success);
+        }
+
+        /// <summary>
+        /// Toggles skip intro setting and triggers callback.
+        /// </summary>
+        private void ToggleSkipIntro(bool current)
+        {
+            bool newValue = !current;
+            _onSkipIntroChanged?.Invoke(newValue);
+            ShowMessage($"Skip BioWare intro {(newValue ? "enabled" : "disabled")}", MessageType.Success);
+        }
+
+        /// <summary>
+        /// Triggers the rescan games callback.
+        /// </summary>
+        private void TriggerRescan() 
+        { 
+            if (ShowConfirmation("Rescan for Mass Effect game installations?")) 
+                _onRescanGames?.Invoke(); 
+        }
+
+        /// <summary>
+        /// Shows manual path input prompt and triggers callback.
+        /// </summary>
+        private void ShowManualPathInput() 
+        {
+            AnsiConsole.Clear();
+            
+            var p = AnsiConsole.Prompt(
+                new TextPrompt<string>("[cyan]Enter the game installation path:[/]")
+                    .AllowEmpty());
+
+            if (!string.IsNullOrWhiteSpace(p)) 
+                _onManualPathAdded?.Invoke(p);
+            else 
+                ShowMessage("No path entered. Operation cancelled.", MessageType.Warning);
         }
 
         /// <summary>
@@ -816,7 +873,6 @@ namespace MassEffectLauncher.Components
         {
             AnsiConsole.Clear();
             
-            // Build display choices from available languages
             var choices = LocaleMapper.AvailableLanguages
                 .Select(lang => lang.GetDisplayString())
                 .ToList();
@@ -825,38 +881,14 @@ namespace MassEffectLauncher.Components
                 new SelectionPrompt<string>()
                     .Title($"[cyan]Select text/subtitle language for {game.Name}:[/]")
                     .AddChoices(choices)
-                    .HighlightStyle(new Style(Color.Aqua)));
+                    .HighlightStyle(new Style(Color.Black, Color.Cyan1)));
 
-            // Find the selected language option
             var selectedLanguage = LocaleMapper.AvailableLanguages
                 .FirstOrDefault(lang => lang.GetDisplayString() == selectedDisplay);
 
             if (selectedLanguage != null)
             {
-                // Update or create game config
-                var gameConfig = _config.Games.FirstOrDefault(g => 
-                    g.Type == game.Type && g.Edition == game.Edition);
-
-                if (gameConfig == null)
-                {
-                    gameConfig = new GameConfig
-                    {
-                        Type = game.Type,
-                        Edition = game.Edition,
-                        Path = game.Path,
-                        Locale = selectedLanguage.Code,
-                        VoiceLanguage = _config.DefaultVoiceLanguage,
-                        ForceFeedback = _config.DefaultForceFeedback
-                    };
-                    _config.Games.Add(gameConfig);
-                }
-                else
-                {
-                    gameConfig.Locale = selectedLanguage.Code;
-                }
-
-                _configManager.Save(_config);
-                
+                UpdateGameConfig(game, conf => conf.Locale = selectedLanguage.Code);
                 ShowMessage($"Text language for {game.Name} changed to: {selectedLanguage.DisplayName}", MessageType.Success);
             }
         }
@@ -868,7 +900,7 @@ namespace MassEffectLauncher.Components
         {
             AnsiConsole.Clear();
             
-            // Build display choices with voice-over availability info
+            // RESTORED: Logic to build display strings with "Native VO" indicators
             var choices = new List<string>();
             
             foreach (var lang in LocaleMapper.AvailableLanguages)
@@ -882,40 +914,16 @@ namespace MassEffectLauncher.Components
                 new SelectionPrompt<string>()
                     .Title($"[cyan]Select voice-over language for {game.Name}:[/]")
                     .AddChoices(choices)
-                    .HighlightStyle(new Style(Color.Aqua)));
+                    .HighlightStyle(new Style(Color.Black, Color.Cyan1)));
 
-            // Extract the language name (before the parenthesis)
+            // RESTORED: Logic to parse the display string back to a language
             var languageName = selectedDisplay.Split('(')[0].Trim();
-            
-            // Find the selected language option
             var selectedLanguage = LocaleMapper.AvailableLanguages
                 .FirstOrDefault(lang => lang.DisplayName == languageName);
 
             if (selectedLanguage != null)
             {
-                // Update or create game config
-                var gameConfig = _config.Games.FirstOrDefault(g => 
-                    g.Type == game.Type && g.Edition == game.Edition);
-
-                if (gameConfig == null)
-                {
-                    gameConfig = new GameConfig
-                    {
-                        Type = game.Type,
-                        Edition = game.Edition,
-                        Path = game.Path,
-                        Locale = _config.DefaultLocale,
-                        VoiceLanguage = selectedLanguage.Code,
-                        ForceFeedback = _config.DefaultForceFeedback
-                    };
-                    _config.Games.Add(gameConfig);
-                }
-                else
-                {
-                    gameConfig.VoiceLanguage = selectedLanguage.Code;
-                }
-
-                _configManager.Save(_config);
+                UpdateGameConfig(game, conf => conf.VoiceLanguage = selectedLanguage.Code);
                 
                 bool hasNativeVO = LocaleMapper.HasNativeVoiceOver(selectedLanguage.Code, game.Type);
                 string voiceType = hasNativeVO ? "native voice-over" : "English voice-over";
@@ -928,126 +936,103 @@ namespace MassEffectLauncher.Components
         /// </summary>
         private void ToggleGameForceFeedback(DetectedGame game, bool currentValue)
         {
-            var newValue = !currentValue;
-
-            // Update or create game config
-            var gameConfig = _config.Games.FirstOrDefault(g => 
-                g.Type == game.Type && g.Edition == game.Edition);
-
-            if (gameConfig == null)
-            {
-                gameConfig = new GameConfig
-                {
-                    Type = game.Type,
-                    Edition = game.Edition,
-                    Path = game.Path,
-                    Locale = _config.DefaultLocale,
-                    VoiceLanguage = _config.DefaultVoiceLanguage,
-                    ForceFeedback = newValue
-                };
-                _config.Games.Add(gameConfig);
-            }
-            else
-            {
-                gameConfig.ForceFeedback = newValue;
-            }
-
-            _configManager.Save(_config);
-            
+            bool newValue = !currentValue;
+            UpdateGameConfig(game, conf => conf.ForceFeedback = newValue);
             ShowMessage($"Force feedback for {game.Name} {(newValue ? "enabled" : "disabled")}", MessageType.Success);
         }
-         
+
+        /// <summary>
+        /// Updates or creates game configuration with the specified action.
+        /// </summary>
+        private void UpdateGameConfig(DetectedGame game, Action<GameConfig> action)
+        {
+            var cfg = _config.Games.FirstOrDefault(x => x.Type == game.Type && x.Edition == game.Edition);
+            
+            if (cfg == null) 
+            {
+                // Create new config if missing
+                cfg = new GameConfig 
+                { 
+                    Type = game.Type, 
+                    Edition = game.Edition, 
+                    Path = game.Path, 
+                    Locale = _config.DefaultLocale, 
+                    VoiceLanguage = _config.DefaultVoiceLanguage 
+                };
+                _config.Games.Add(cfg);
+            }
+
+            action(cfg);
+            _configManager.Save(_config);
+        }
+
+        #endregion
+
+        #region Game Launch Flow
 
         /// <summary>
         /// Handles the complete game launch flow including elevation checks.
         /// </summary>
         /// <param name="game">The detected game to launch.</param>
-        /// <param name="launchOptions">The launch options including locale, voice language, and force feedback.</param>
-        /// <param name="adminElevator">The admin elevator component for privilege checks.</param>
-        /// <param name="gameLauncher">The game launcher component.</param>
-        public void LaunchGameWithFlow(DetectedGame game, LaunchOptions launchOptions, 
-            MELE_launcher.Components.AdminElevator adminElevator, 
-            MELE_launcher.Components.GameLauncher gameLauncher)
+        /// <param name="options">The launch options including locale, voice language, and force feedback.</param>
+        /// <param name="admin">The admin elevator component for privilege checks.</param>
+        /// <param name="launcher">The game launcher component.</param>
+        public void LaunchGameWithFlow(DetectedGame game, LaunchOptions options, 
+            MELE_launcher.Components.AdminElevator admin, 
+            MELE_launcher.Components.GameLauncher launcher)
         {
-            if (game == null)
-            {
-                ShowMessage("Cannot launch: Game is null.", MessageType.Error);
-                return;
-            }
+            if (game == null) { ShowMessage("Cannot launch: Game is null.", MessageType.Error); return; }
+            if (admin == null) { ShowMessage("Cannot launch: Admin elevator is not initialized.", MessageType.Error); return; }
+            if (launcher == null) { ShowMessage("Cannot launch: Game launcher is not initialized.", MessageType.Error); return; }
 
-            if (adminElevator == null)
+            // Admin Elevation Logic
+            if (game.RequiresAdmin && !admin.IsRunningAsAdmin())
             {
-                ShowMessage("Cannot launch: Admin elevator is not initialized.", MessageType.Error);
-                return;
-            }
-
-            if (gameLauncher == null)
-            {
-                ShowMessage("Cannot launch: Game launcher is not initialized.", MessageType.Error);
-                return;
-            }
-
-            if (launchOptions == null)
-            {
-                ShowMessage("Cannot launch: Launch options are null.", MessageType.Error);
-                return;
-            }
-
-            // Check if elevation is required
-            if (game.RequiresAdmin && !adminElevator.IsRunningAsAdmin())
-            {
-                // Prompt for elevation
                 bool shouldElevate = ShowConfirmation(
                     $"{game.Name} is installed in a protected location and requires administrator privileges.\n" +
                     "Would you like to restart the launcher with administrator privileges?");
 
                 if (shouldElevate)
                 {
-                    // Request elevation
-                    bool elevationSuccess = adminElevator.RequestElevation(Environment.GetCommandLineArgs());
+                    bool elevationSuccess = admin.RequestElevation(Environment.GetCommandLineArgs());
 
                     if (elevationSuccess)
                     {
                         ShowMessage("Restarting with administrator privileges...", MessageType.Info);
-                        // The application will be restarted with elevation, so we should exit
                         Environment.Exit(0);
                     }
                     else
                     {
-                        ShowMessage(
-                            "Failed to obtain administrator privileges. The game may not launch correctly.\n" +
-                            "You can try running the launcher as administrator manually.",
-                            MessageType.Error);
+                        ShowMessage("Failed to obtain administrator privileges. The game may not launch correctly.", MessageType.Error);
                         return;
                     }
                 }
                 else
                 {
-                    ShowMessage("Launch cancelled. Administrator privileges are required for this game.", MessageType.Warning);
+                    ShowMessage("Launch cancelled. Administrator privileges are required.", MessageType.Warning);
                     return;
                 }
             }
 
-            // Show launching message with language info
+            // Launch UI
             AnsiConsole.Clear();
-            var textLang = LocaleMapper.GetLanguageOption(launchOptions.Locale).DisplayName;
-            var voiceLang = LocaleMapper.GetLanguageOption(launchOptions.VoiceLanguage).DisplayName;
-            var hasNativeVO = LocaleMapper.HasNativeVoiceOver(launchOptions.VoiceLanguage, game.Type);
+            
+            var textLang = LocaleMapper.GetLanguageOption(options.Locale).DisplayName;
+            var voiceLang = LocaleMapper.GetLanguageOption(options.VoiceLanguage).DisplayName;
+            var hasNativeVO = LocaleMapper.HasNativeVoiceOver(options.VoiceLanguage, game.Type);
             var voiceType = hasNativeVO ? "native" : "English";
             
-            AnsiConsole.MarkupLine($"[cyan]Launching {game.Name}...[/]");
-            AnsiConsole.MarkupLine($"[dim]Text: {textLang} | Voice: {voiceLang} ({voiceType} VO)[/]");
-            AnsiConsole.WriteLine();
+            var panel = new Panel(new Markup($"[cyan]Launching {game.Name}...[/]\n[dim]Text: {textLang} | Voice: {voiceLang} ({voiceType} VO)[/]")) 
+            { 
+                Border = BoxBorder.Heavy, 
+                BorderStyle = new Style(Color.Cyan1) 
+            };
 
-            // Launch the game
+            AnsiConsole.Write(new Padder(panel, new Padding(4)));
+
             LaunchResult result = null;
-            
-            ShowProgress("Starting game...", () =>
-            {
-                result = gameLauncher.Launch(game, launchOptions);
-            });
+            ShowProgress("Starting game...", () => { result = launcher.Launch(game, options); });
 
-            // Display result
             if (result != null && result.Success)
             {
                 ShowMessage($"{game.Name} launched successfully!", MessageType.Success);
@@ -1058,5 +1043,46 @@ namespace MassEffectLauncher.Components
                 ShowMessage($"Failed to launch {game.Name}:\n{errorMsg}", MessageType.Error);
             }
         }
+
+        #endregion
+
+        #region Visual Theme Structure
+
+        // Visual Theme Struct
+        private class Theme
+        {
+            public Color Primary, Secondary, Accent, Muted, Highlight, Border;
+            public string SecondaryName, AccentName, HighlightName;
+
+            public Theme() => SetStandardMode();
+
+            public void SetStandardMode()
+            {
+                Primary = Color.White; 
+                Secondary = Color.SlateBlue1; 
+                Accent = Color.Cyan1;
+                Muted = Color.Grey39; 
+                Highlight = Color.Cyan1; 
+                Border = Color.SlateBlue3;
+                SecondaryName = "slateBlue1"; 
+                AccentName = "cyan1"; 
+                HighlightName = "cyan1";
+            }
+
+            public void SetAdminMode()
+            {
+                Primary = Color.White; 
+                Secondary = Color.Orange1; 
+                Accent = Color.Red1;
+                Muted = Color.Grey39; 
+                Highlight = Color.Orange1; 
+                Border = Color.Red3;
+                SecondaryName = "orange1"; 
+                AccentName = "red1"; 
+                HighlightName = "orange1";
+            }
+        }
+
+        #endregion
     }
 }
