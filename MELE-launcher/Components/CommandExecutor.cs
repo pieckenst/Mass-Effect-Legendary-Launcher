@@ -170,8 +170,8 @@ namespace MELE_launcher.Components
             _builtInHandlers["settings"] = (args, cmd) =>
             {
                 _onSettings?.Invoke();
-                // We return null because the settings menu will take over the UI rendering
-                return "[cyan]Opening configuration parameters...[/]";
+                // Return null so terminal closes and settings menu takes over
+                return null;
             };
 
             // Exit

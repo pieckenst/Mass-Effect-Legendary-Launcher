@@ -401,6 +401,17 @@ namespace MassEffectLauncher.Components
             if (!string.IsNullOrWhiteSpace(rawInput))
             {
                 _commandExecutor(rawInput);
+                
+                // Check if command wants to close terminal (settings, exit, etc.)
+                var lowerCmd = rawInput.Trim().ToLower().Split(' ')[0];
+                if (lowerCmd == "settings" || lowerCmd == "config" || lowerCmd == "cfg" || 
+                    lowerCmd == "exit" || lowerCmd == "quit" || lowerCmd == "q")
+                {
+                    // Close terminal and let the command take over
+                    _isInputMode = false;
+                    _keepInputOpen = false;
+                    return;
+                }
             }
         }
         else
@@ -788,117 +799,120 @@ private IRenderable RenderCenteredCommandInput()
     );
 }
 
-    private IRenderable RenderCenteredTerminal()
+    /// <summary>
+/// Renders a centered terminal with a 'Fat' solid input box and floating output.
+/// </summary>
+private IRenderable RenderCenteredTerminal()
 {
-    // ==========================================
-    // 1. TOP BLOCK: THE COMMAND INPUT BAR
-    // ==========================================
-    
-    // Construct Input String
-    string inputLine;
-    if (_inputBuffer.Length == 0)
-    {
-        inputLine = $"[bold {_theme.HighlightName}]{_inputPrompt}[/] [dim italic]Awaiting instructions...[/][blink {_theme.AccentName}]_[/]";
-    }
-    else
-    {
-        // Only escape the USER'S typing (buffer), not the prompt
-        string safeBuffer = _inputBuffer.ToString().Replace("[", "[[").Replace("]", "]]");
-        inputLine = $"[bold {_theme.HighlightName}]{_inputPrompt}[/] [white]{safeBuffer}[/][blink {_theme.AccentName}]_[/]";
-    }
+    // Aesthethic Configuration
+    const int TERM_WIDTH = 80;
+    const string BG_COLOR = "grey15";  // Solid dark grey background
+    const string TXT_COLOR = "white";  // Input text color
+    const string PMT_BG = "cyan1";     // Prompt background for contrast
+    const string PMT_FG = "black";     // Prompt foreground
 
-    // Wrap Input in a tight, high-visibility panel
-    var inputPanel = new Panel(new Markup(inputLine))
+    // 1. CONSTRUCT THE SOLID "FAT" INPUT BLOCK
+    string safeInput = _inputBuffer.ToString().Replace("[", "[[").Replace("]", "]]");
+    string prompt = _inputPrompt; 
+    
+    // Calculate visual length of content:
+    // Prompt Block: " " + prompt + " " -> prompt.Length + 2
+    // Input Block Start: " "           -> 1
+    // Input Text: safeInput            -> safeInput.Length
+    // Cursor: "_"                      -> 1
+    // Total used = prompt.Length + safeInput.Length + 4
+    
+    int contentLen = prompt.Length + safeInput.Length + 4; 
+    int fillLen = TERM_WIDTH - contentLen;
+    if (fillLen < 0) fillLen = 0;
+    
+    string filler = new string(' ', fillLen);
+    string fullWidthSpace = new string(' ', TERM_WIDTH);
+
+    var inputBlockGrid = new Grid();
+    inputBlockGrid.AddColumn(new GridColumn().NoWrap());
+
+    // Row 1: Top solid spacer
+    inputBlockGrid.AddRow(new Markup($"[{BG_COLOR} on {BG_COLOR}]{fullWidthSpace}[/]"));
+    
+    // Row 2: The actual input line
+    // We strictly control spaces here to match the math above
+    string middleRow = 
+        $"[{PMT_FG} on {PMT_BG}] {prompt} [/]" +
+        $"[{TXT_COLOR} on {BG_COLOR}] {safeInput}[blink]_[/]{filler}[/]";
+    inputBlockGrid.AddRow(new Markup(middleRow));
+    
+    // Row 3: Bottom solid spacer
+    inputBlockGrid.AddRow(new Markup($"[{BG_COLOR} on {BG_COLOR}]{fullWidthSpace}[/]"));
+
+    var inputPanel = new Panel(inputBlockGrid)
     {
-        Border = BoxBorder.Double,           // Strong border for active element
-        BorderStyle = new Style(_theme.Highlight),
-        Header = new PanelHeader($" [bold {_theme.AccentName} underline]TERMINAL UPLINK[/] "),
-        Padding = new Padding(2, 0, 2, 0),   // Compact padding
-        Width = 90
+        Border = BoxBorder.None,
+        Width = TERM_WIDTH,
+        Padding = new Padding(0, 0, 0, 0)
     };
 
-    // ==========================================
-    // 2. BOTTOM BLOCK: THE FLOATING OUTPUT LOG
-    // ==========================================
-
+    // 2. CONSTRUCT THE FLOATING HISTORY LOG
     var historyGrid = new Grid();
     historyGrid.AddColumn(new GridColumn().NoWrap());
 
     if (_terminalHistory.Count > 0)
     {
-        foreach (var (prefix, text, color) in _terminalHistory)
+        // Spacer so text doesn't touch the input block
+        historyGrid.AddRow(new Text(" "));
+
+        foreach (var (pfx, text, color) in _terminalHistory)
         {
-            // CRITICAL FIX: Do NOT escape 'text' here. It contains colors (e.g. [cyan]).
-            // We assume CommandExecutor sends valid markup.
-            // We only format the prefix if it exists.
-
-            var colorName = GetColorName(color);
-
-            if (!string.IsNullOrEmpty(prefix))
+            var cName = GetColorName(color);
+            
+            if (!string.IsNullOrEmpty(pfx))
             {
-                // Prefix + Text (e.g. "CMD > help")
-                // Escape prefix just in case, but trust text
-                historyGrid.AddRow(new Markup($"[{colorName}]{Markup.Escape(prefix)}[/] {text}"));
+                // Echoed command style
+                historyGrid.AddRow(new Markup($"[dim grey50] >[/] {text}"));
             }
             else
             {
-                // Pure Text output (e.g. help menu)
-                // If text starts with a tag like [cyan], render it directly
-                // Otherwise wrap it in the history color
+                // Result style
                 if (text.TrimStart().StartsWith("["))
-                {
-                     historyGrid.AddRow(new Markup(text));
-                }
+                    historyGrid.AddRow(new Markup(text));
                 else
-                {
-                     historyGrid.AddRow(new Markup($"[{colorName}]{text}[/]"));
-                }
+                    historyGrid.AddRow(new Markup($"[{cName}]{text}[/]"));
             }
         }
     }
     else
     {
-        // Initial State
-        historyGrid.AddRow(new Markup($"[dim]Systems Alliance Network v2.1 Connected...[/]"));
-        historyGrid.AddRow(new Markup($"[dim]Awaiting command input.[/]"));
+        // Empty State
+        historyGrid.AddRow(new Text(" "));
+        historyGrid.AddRow(new Markup("[dim]Systems Alliance Terminal v2.1...[/]"));
+        historyGrid.AddRow(new Markup("[dim]Ready for input.[/]"));
     }
 
-    // Wrap Output in a specific "Screen" panel
-    var outputPanel = new Panel(historyGrid)
+    var historyPanel = new Panel(historyGrid)
     {
-        Border = BoxBorder.Rounded,          // Softer border for passive data
-        BorderStyle = new Style(_theme.Muted), // Dimmer color
-        Padding = new Padding(2, 1, 2, 1),
-        Width = 90,
-        Expand = true
+        Border = BoxBorder.None,
+        Width = TERM_WIDTH,
+        Padding = new Padding(1, 0, 0, 0) 
     };
 
-    // ==========================================
-    // 3. ASSEMBLY: STACK THEM WITH A GAP
-    // ==========================================
-    
-    var compositeLayout = new Grid();
-    compositeLayout.AddColumn(new GridColumn().Centered());
-    
-    // Add Input
-    compositeLayout.AddRow(inputPanel);
-    
-    // Add "Floating" Gap (The distance you requested)
-    compositeLayout.AddRow(new Text(" ")); 
-    
-    // Add Output
-    compositeLayout.AddRow(outputPanel);
-    
-    // Add Helper Footer
-    compositeLayout.AddRow(new Markup("[dim]ENTER to Execute • ~ to Minimize • ESC to Close[/]").Centered());
+    // 3. FINAL COMPOSITION
+    var layoutGrid = new Grid();
+    layoutGrid.AddColumn(new GridColumn().Centered());
 
-    // 4. Align the whole group to the bottom
+    layoutGrid.AddRow(new Markup($"[bold {_theme.HighlightName}]TERMINAL UPLINK[/]"));
+    
+    layoutGrid.AddRow(inputPanel);
+    layoutGrid.AddRow(historyPanel);
+    
+    layoutGrid.AddRow(new Text(""));
+    layoutGrid.AddRow(new Markup("[dim]ENTER to Execute • ESC to Close[/]"));
+
+    // 4. ALIGNMENT
     return Align.Center(
-        new Padder(compositeLayout, new Padding(0, 0, 0, 2)), // Padding from bottom edge
+        new Padder(layoutGrid, new Padding(0, 0, 0, 2)), 
         VerticalAlignment.Bottom
     );
 }
-
         /// <summary>
         /// Helper to get color name string from Color object.
         /// </summary>
