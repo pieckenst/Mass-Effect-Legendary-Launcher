@@ -788,17 +788,13 @@ private IRenderable RenderCenteredCommandInput()
     );
 }
 
-     private IRenderable RenderCenteredTerminal()
+    private IRenderable RenderCenteredTerminal()
 {
-    // 1. Build Content
-    var content = new Grid();
-    content.AddColumn(new GridColumn().Centered());
-
-    // Header
-    content.AddRow(new Markup($"[bold {_theme.AccentName} underline]TERMINAL UPLINK[/]"));
-    content.AddRow(new Text(""));
-
-    // 2. Input Line
+    // ==========================================
+    // 1. TOP BLOCK: THE COMMAND INPUT BAR
+    // ==========================================
+    
+    // Construct Input String
     string inputLine;
     if (_inputBuffer.Length == 0)
     {
@@ -806,39 +802,49 @@ private IRenderable RenderCenteredCommandInput()
     }
     else
     {
-        // Sanitize visual buffer just for this frame
+        // Only escape the USER'S typing (buffer), not the prompt
         string safeBuffer = _inputBuffer.ToString().Replace("[", "[[").Replace("]", "]]");
         inputLine = $"[bold {_theme.HighlightName}]{_inputPrompt}[/] [white]{safeBuffer}[/][blink {_theme.AccentName}]_[/]";
     }
-    content.AddRow(new Markup(inputLine));
 
-    // Separator
-    content.AddRow(new Text(""));
-    content.AddRow(new Rule { Style = new Style(_theme.Muted) });
+    // Wrap Input in a tight, high-visibility panel
+    var inputPanel = new Panel(new Markup(inputLine))
+    {
+        Border = BoxBorder.Double,           // Strong border for active element
+        BorderStyle = new Style(_theme.Highlight),
+        Header = new PanelHeader($" [bold {_theme.AccentName} underline]TERMINAL UPLINK[/] "),
+        Padding = new Padding(2, 0, 2, 0),   // Compact padding
+        Width = 90
+    };
 
-    // 3. History Grid (The Fix: Remove the .Replace calls here!)
+    // ==========================================
+    // 2. BOTTOM BLOCK: THE FLOATING OUTPUT LOG
+    // ==========================================
+
     var historyGrid = new Grid();
-    historyGrid.AddColumn(new GridColumn().PadLeft(2).NoWrap());
+    historyGrid.AddColumn(new GridColumn().NoWrap());
 
     if (_terminalHistory.Count > 0)
     {
         foreach (var (prefix, text, color) in _terminalHistory)
         {
-            // CRITICAL FIX: We do NOT escape 'text' here. 
-            // We assume it contains valid markup from the CommandExecutor.
-            // User input was already escaped in HandleTerminalInput.
-            
+            // CRITICAL FIX: Do NOT escape 'text' here. It contains colors (e.g. [cyan]).
+            // We assume CommandExecutor sends valid markup.
+            // We only format the prefix if it exists.
+
             var colorName = GetColorName(color);
 
             if (!string.IsNullOrEmpty(prefix))
             {
-                // Prefix + Text
-                historyGrid.AddRow(new Markup($"[{colorName}]{prefix}[/] {text}"));
+                // Prefix + Text (e.g. "CMD > help")
+                // Escape prefix just in case, but trust text
+                historyGrid.AddRow(new Markup($"[{colorName}]{Markup.Escape(prefix)}[/] {text}"));
             }
             else
             {
-                // Text only (handles complex markup from help/list commands)
-                // We wrap it in a color tag only if the text doesn't start with one
+                // Pure Text output (e.g. help menu)
+                // If text starts with a tag like [cyan], render it directly
+                // Otherwise wrap it in the history color
                 if (text.TrimStart().StartsWith("["))
                 {
                      historyGrid.AddRow(new Markup(text));
@@ -852,28 +858,43 @@ private IRenderable RenderCenteredCommandInput()
     }
     else
     {
-        historyGrid.AddRow(new Markup($"[dim]Systems Alliance Terminal v2.1 initialized...[/]"));
+        // Initial State
+        historyGrid.AddRow(new Markup($"[dim]Systems Alliance Network v2.1 Connected...[/]"));
+        historyGrid.AddRow(new Markup($"[dim]Awaiting command input.[/]"));
     }
-    
-    content.AddRow(historyGrid);
 
-    // 4. Footer
-    content.AddRow(new Text(""));
-    content.AddRow(new Markup("[dim]ENTER to Execute • ~ to Minimize • ESC to Close[/]"));
-
-    // 5. Container Panel
-    var panel = new Panel(content)
+    // Wrap Output in a specific "Screen" panel
+    var outputPanel = new Panel(historyGrid)
     {
-        Border = BoxBorder.Double,
-        BorderStyle = new Style(_theme.Highlight),
+        Border = BoxBorder.Rounded,          // Softer border for passive data
+        BorderStyle = new Style(_theme.Muted), // Dimmer color
         Padding = new Padding(2, 1, 2, 1),
-        Width = 100
+        Width = 90,
+        Expand = true
     };
 
-    // 6. Bottom Alignment
-    // The Padder ensures it sits 2 lines up from the absolute bottom edge
+    // ==========================================
+    // 3. ASSEMBLY: STACK THEM WITH A GAP
+    // ==========================================
+    
+    var compositeLayout = new Grid();
+    compositeLayout.AddColumn(new GridColumn().Centered());
+    
+    // Add Input
+    compositeLayout.AddRow(inputPanel);
+    
+    // Add "Floating" Gap (The distance you requested)
+    compositeLayout.AddRow(new Text(" ")); 
+    
+    // Add Output
+    compositeLayout.AddRow(outputPanel);
+    
+    // Add Helper Footer
+    compositeLayout.AddRow(new Markup("[dim]ENTER to Execute • ~ to Minimize • ESC to Close[/]").Centered());
+
+    // 4. Align the whole group to the bottom
     return Align.Center(
-        new Padder(panel, new Padding(0, 0, 0, 2)), 
+        new Padder(compositeLayout, new Padding(0, 0, 0, 2)), // Padding from bottom edge
         VerticalAlignment.Bottom
     );
 }
