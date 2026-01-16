@@ -29,6 +29,11 @@ namespace MELE_launcher.Models
         public bool DefaultForceFeedback { get; set; } = false;
 
         /// <summary>
+        /// Gets or sets whether to skip the BioWare intro video by default.
+        /// </summary>
+        public bool DefaultSkipIntro { get; set; } = true;
+
+        /// <summary>
         /// Gets or sets the date when games were last scanned.
         /// </summary>
         public DateTime LastScanDate { get; set; } = DateTime.MinValue;

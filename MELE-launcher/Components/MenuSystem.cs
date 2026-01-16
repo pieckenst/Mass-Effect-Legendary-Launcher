@@ -16,6 +16,7 @@ namespace MassEffectLauncher.Components
         private bool _isAdmin;
         private Action<string> _onLocaleChanged;
         private Action<bool> _onForceFeedbackChanged;
+        private Action<bool> _onSkipIntroChanged;
         private Action _onRescanGames;
         private Action<string> _onManualPathAdded;
         private LauncherConfig _config;
@@ -48,6 +49,12 @@ namespace MassEffectLauncher.Components
             SetForceFeedbackChangedCallback(enabled =>
             {
                 _config.DefaultForceFeedback = enabled;
+                _configManager.Save(_config);
+            });
+
+            SetSkipIntroChangedCallback(enabled =>
+            {
+                _config.DefaultSkipIntro = enabled;
                 _configManager.Save(_config);
             });
         }
@@ -466,6 +473,14 @@ namespace MassEffectLauncher.Components
         }
 
         /// <summary>
+        /// Sets the callback for when skip intro is changed in settings.
+        /// </summary>
+        public void SetSkipIntroChangedCallback(Action<bool> callback)
+        {
+            _onSkipIntroChanged = callback;
+        }
+
+        /// <summary>
         /// Sets the callback for when rescan games is triggered.
         /// </summary>
         public void SetRescanGamesCallback(Action callback)
@@ -491,7 +506,7 @@ namespace MassEffectLauncher.Components
                 throw new InvalidOperationException("MenuSystem must be initialized with a ConfigManager before building settings menu.");
             }
 
-            return BuildSettingsMenu(_config.DefaultLocale, _config.DefaultForceFeedback);
+            return BuildSettingsMenu(_config.DefaultLocale, _config.DefaultForceFeedback, _config.DefaultSkipIntro);
         }
 
         /// <summary>
@@ -499,7 +514,8 @@ namespace MassEffectLauncher.Components
         /// </summary>
         /// <param name="currentLocale">The current default locale setting.</param>
         /// <param name="currentForceFeedback">The current default force feedback setting.</param>
-        public List<MenuItem> BuildSettingsMenu(string currentLocale, bool currentForceFeedback)
+        /// <param name="currentSkipIntro">The current default skip intro setting.</param>
+        public List<MenuItem> BuildSettingsMenu(string currentLocale, bool currentForceFeedback, bool currentSkipIntro)
         {
             var menuItems = new List<MenuItem>();
 
@@ -521,6 +537,16 @@ namespace MassEffectLauncher.Components
                 Type = MenuItemType.Setting,
                 IsEnabled = true,
                 OnSelect = () => ToggleForceFeedback(currentForceFeedback)
+            });
+
+            // Skip intro toggle
+            menuItems.Add(new MenuItem
+            {
+                Title = $"Skip BioWare Intro: {(currentSkipIntro ? "Enabled" : "Disabled")}",
+                Description = "Skip the BioWare intro video when launching games",
+                Type = MenuItemType.Setting,
+                IsEnabled = true,
+                OnSelect = () => ToggleSkipIntro(currentSkipIntro)
             });
 
             // Separator
@@ -610,6 +636,17 @@ namespace MassEffectLauncher.Components
             _onForceFeedbackChanged?.Invoke(newValue);
             
             ShowMessage($"Default force feedback {(newValue ? "enabled" : "disabled")}", MessageType.Success);
+        }
+
+        /// <summary>
+        /// Toggles skip intro setting and triggers callback.
+        /// </summary>
+        private void ToggleSkipIntro(bool currentValue)
+        {
+            var newValue = !currentValue;
+            _onSkipIntroChanged?.Invoke(newValue);
+            
+            ShowMessage($"Skip BioWare intro {(newValue ? "enabled" : "disabled")}", MessageType.Success);
         }
 
         /// <summary>
@@ -743,7 +780,8 @@ namespace MassEffectLauncher.Components
                         Locale = config?.Locale ?? _config?.DefaultLocale ?? "INT",
                         VoiceLanguage = config?.VoiceLanguage ?? _config?.DefaultVoiceLanguage ?? "INT",
                         ForceFeedback = config?.ForceFeedback ?? _config?.DefaultForceFeedback ?? false,
-                        Silent = false
+                        Silent = false,
+                        PlayIntro = !(_config?.DefaultSkipIntro ?? true)
                     };
                     
                     onLaunch?.Invoke(launchOptions);

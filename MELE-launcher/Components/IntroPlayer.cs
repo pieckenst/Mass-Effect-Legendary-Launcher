@@ -78,13 +78,35 @@ namespace MELE_launcher.Components
                     return await PlayWithBinkSDKAsync(introPath, allowSkip, parentControl);
                 }
 
-                // Step 2: Check FFmpeg compatibility before trying RAD Video Tools
-                Console.WriteLine("🔍 Checking FFmpeg compatibility with .bik file...");
-                var videoInfo = await VideoCompatibilityChecker.CheckFFmpegCompatibilityAsync(introPath, _ffmpegDownloader);
-                
-                if (videoInfo.IsDecodable)
+                // Step 2: Try RAD Video Tools (best for .bik files, better than FFmpeg)
+                string binkPlayerPath = GetInstalledBinkPlayerPath();
+                if (binkPlayerPath != null)
                 {
-                    Console.WriteLine($"✅ FFmpeg can decode .bik file ({videoInfo.Width}x{videoInfo.Height})");
+                    Console.WriteLine("🎮 Using RAD Video Tools (optimal for .bik files)...");
+                    // Get video info for aspect ratio calculations
+                    var videoInfo = await VideoCompatibilityChecker.CheckFFmpegCompatibilityAsync(introPath, _ffmpegDownloader);
+                    return await PlayWithBinkPlayerAsync(introPath, binkPlayerPath, allowSkip, parentControl, videoInfo);
+                }
+
+                // Step 3: Try to download RAD Video Tools if not installed
+                binkPlayerPath = await _radDownloader.EnsureBinkPlayerAsync();
+                if (binkPlayerPath != null)
+                {
+                    Console.WriteLine("🎮 Using downloaded RAD Video Tools...");
+                    var videoInfo = await VideoCompatibilityChecker.CheckFFmpegCompatibilityAsync(introPath, _ffmpegDownloader);
+                    return await PlayWithBinkPlayerAsync(introPath, binkPlayerPath, allowSkip, parentControl, videoInfo);
+                }
+
+                // Step 4: Last resort - try FFmpeg (has known issues with .bik playback)
+                Console.WriteLine("⚠ Warning: FFmpeg has limited .bik support and may show broken playback");
+                Console.WriteLine("🔍 Checking FFmpeg compatibility with .bik file...");
+                var ffmpegVideoInfo = await VideoCompatibilityChecker.CheckFFmpegCompatibilityAsync(introPath, _ffmpegDownloader);
+                
+                if (ffmpegVideoInfo.IsDecodable)
+                {
+                    Console.WriteLine($"⚠ FFmpeg reports it can decode .bik file, but playback may be broken");
+                    Console.WriteLine($"   Video info: {ffmpegVideoInfo.Width}x{ffmpegVideoInfo.Height}");
+                    Console.WriteLine($"   Consider installing RAD Video Tools for proper playback");
                     string ffplayPath = _ffmpegDownloader.GetFFplayPath();
                     if (ffplayPath != null)
                     {
@@ -93,22 +115,7 @@ namespace MELE_launcher.Components
                 }
                 else
                 {
-                    Console.WriteLine($"❌ FFmpeg cannot decode .bik file: {videoInfo.ErrorMessage}");
-                }
-
-                // Step 3: Fallback to RAD Video Tools with proper aspect-fit scaling
-                string binkPlayerPath = GetInstalledBinkPlayerPath();
-                if (binkPlayerPath != null)
-                {
-                    Console.WriteLine("🎮 Using RAD Video Tools with aspect-fit scaling...");
-                    return await PlayWithBinkPlayerAsync(introPath, binkPlayerPath, allowSkip, parentControl, videoInfo);
-                }
-
-                // Step 4: Try to ensure RAD Video Tools via downloader
-                binkPlayerPath = await _radDownloader.EnsureBinkPlayerAsync();
-                if (binkPlayerPath != null)
-                {
-                    return await PlayWithBinkPlayerAsync(introPath, binkPlayerPath, allowSkip, parentControl, videoInfo);
+                    Console.WriteLine($"❌ FFmpeg cannot decode .bik file: {ffmpegVideoInfo.ErrorMessage}");
                 }
 
                 Console.WriteLine("⚠ Could not set up video player. Skipping intro.");

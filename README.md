@@ -7,7 +7,10 @@ A modern, feature-rich launcher for Mass Effect Legendary Edition and the Origin
 - **Automatic Game Detection**: Automatically scans for Mass Effect games on your system
 - **Separate Text and Voice Language Selection**: Choose different languages for subtitles and voice-overs
 - **Force Feedback Control**: Enable or disable controller force feedback
-- **BioWare Intro Video**: Plays the authentic BioWare logo intro before game launch (can be skipped with ESC)
+- **Skip BioWare Intro**: Option to skip the BioWare intro video (enabled by default)
+- **BioWare Intro Video**: Plays the authentic BioWare logo intro before game launch with proper .bik support
+  - Prioritizes native Bink SDK and RAD Video Tools for perfect playback
+  - FFmpeg used only as last resort (has known issues with .bik files)
 - **Command-Line Support**: Launch games directly without the interactive menu
 - **Admin Elevation**: Automatically handles games that require administrator privileges
 - **Interactive Terminal UI**: Beautiful, easy-to-navigate menu system using Spectre.Console
@@ -205,6 +208,14 @@ If language settings aren't being applied:
 1. Verify you're using the correct language code for your game version
 2. Check that the language files are installed in your game directory
 3. Some languages may not have voice-over support in certain games
+
+### Broken or Corrupted BioWare Intro Video
+If the BioWare intro video appears corrupted, garbled, or shows visual artifacts:
+1. This indicates FFmpeg is being used (has known issues with .bik files)
+2. **Solution**: Install [RAD Video Tools](http://www.radgametools.com/bnkdown.htm) for proper .bik playback
+3. The launcher will automatically detect and use RAD Video Tools
+4. Alternatively, enable "Skip BioWare Intro" in Settings to bypass the video entirely
+5. For best quality, the launcher prioritizes: Bink SDK > RAD Video Tools > FFmpeg
 
 ## Support
 

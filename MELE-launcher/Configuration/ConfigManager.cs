@@ -90,6 +90,7 @@ namespace MELE_launcher.Configuration
                 DefaultLocale = "INT",
                 DefaultVoiceLanguage = "INT",
                 DefaultForceFeedback = false,
+                DefaultSkipIntro = true,
                 LastScanDate = DateTime.MinValue
             };
         }

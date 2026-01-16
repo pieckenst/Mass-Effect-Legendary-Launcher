@@ -18,21 +18,25 @@ The IntroPlayer component now uses a **"hands-off" approach** for RAD Video Tool
 - **Embedded**: True embedded playback in WinForms controls
 - **ESC Support**: Custom ESC key handling
 - **Process Management**: No external processes
+- **Quality**: Perfect native .bik playback
 
-### 🎮 **BinkPlay.exe** (Priority 2 - Hands-Off Mode)
+### 🎮 **RAD Video Tools / BinkPlay** (Priority 2 - Optimal for .bik files)
 - **When**: RAD Video Tools installed, Bink SDK not available
 - **Fullscreen**: BinkPlay handles its own window - **NO custom overlays**
 - **Embedded**: **Not supported** - falls back to fullscreen mode
 - **ESC Support**: BinkPlay handles ESC internally - **NO custom handling**
 - **Process Management**: Simple process start and wait - **NO custom forms**
 - **Key Point**: **Completely hands-off to prevent crashes**
+- **Quality**: Excellent native .bik playback (better than FFmpeg)
 
-### 🔄 **FFmpeg** (Priority 3 - Fallback)
-- **When**: Neither Bink SDK nor BinkPlay available
+### 🔄 **FFmpeg** (Priority 3 - Last Resort Fallback)
+- **When**: Neither Bink SDK nor RAD Video Tools available
 - **Fullscreen**: Custom overlay form with ESC handling
 - **Embedded**: Window embedding with parent control
 - **ESC Support**: Custom ESC key handling
 - **Process Management**: Full custom control and embedding
+- **Quality**: ⚠️ **Known issues with .bik playback** - may show broken/corrupted video
+- **Note**: FFmpeg has limited Bink video codec support and often produces broken playback
 
 ## Usage Examples
 
@@ -42,9 +46,9 @@ var introPlayer = new IntroPlayer();
 bool success = await introPlayer.PlayBioWareIntroAsync(gamePath, allowSkip: true);
 
 // Behavior:
-// 1. Tries Bink SDK first (native integration)
-// 2. Falls back to BinkPlay (hands-off mode - no custom controls)
-// 3. Falls back to FFmpeg (custom overlay with ESC handling)
+// 1. Tries Bink SDK first (native integration - best quality)
+// 2. Falls back to RAD Video Tools/BinkPlay (hands-off mode - excellent quality)
+// 3. Last resort: FFmpeg (custom overlay - may have broken playback for .bik files)
 ```
 
 ### Embedded Playback in a WinForms Control
@@ -56,9 +60,9 @@ parentForm.Controls.Add(videoPanel);
 bool success = await introPlayer.PlayBioWareIntroAsync(gamePath, allowSkip: true, videoPanel);
 
 // Behavior:
-// 1. Tries Bink SDK first (true embedding)
-// 2. BinkPlay doesn't support embedding - uses fullscreen instead (hands-off)
-// 3. Falls back to FFmpeg (window embedding with custom controls)
+// 1. Tries Bink SDK first (true embedding - best quality)
+// 2. RAD Video Tools doesn't support embedding - uses fullscreen instead (excellent quality)
+// 3. Falls back to FFmpeg (window embedding - may have broken playback)
 ```
 
 ### Integration with WPF (using WindowsFormsHost)
@@ -75,6 +79,26 @@ bool success = await introPlayer.PlayBioWareIntroAsync(gamePath, allowSkip: true
 // Uses Bink SDK for true embedding, or FFmpeg if SDK not available
 // BinkPlay will ignore the parent control and go fullscreen
 ```
+
+## Why RAD Video Tools is Prioritized Over FFmpeg
+
+### ❌ FFmpeg Issues with .bik Files
+- FFmpeg has **limited Bink video codec support**
+- Often produces **broken/corrupted playback** with visual artifacts
+- May show black screen or garbled video
+- Not designed for proprietary Bink format
+
+### ✅ RAD Video Tools Advantages
+- **Native .bik file support** - designed specifically for Bink videos
+- **Perfect playback quality** - no corruption or artifacts
+- **Hands-off approach** - BinkPlay manages everything itself
+- **Built-in ESC handling** - no custom code needed
+- **Reliable and stable** - industry-standard tool
+
+### Priority Order Rationale
+1. **Bink SDK**: Best option - native integration with perfect quality
+2. **RAD Video Tools**: Second best - native .bik support, excellent quality
+3. **FFmpeg**: Last resort - known issues with .bik playback
 
 ## Why BinkPlay Uses "Hands-Off" Mode
 
@@ -127,9 +151,10 @@ This ensures:
 
 ## Notes
 
-- **Fullscreen Mode**: Always uses BinkPlay for best .bik file quality
-- **Embedded Mode**: Always uses FFmpeg for reliable embedding
+- **Fullscreen Mode**: Prioritizes RAD Video Tools for best .bik file quality
+- **Embedded Mode**: Uses Bink SDK if available, otherwise RAD Video Tools in fullscreen
+- **FFmpeg Fallback**: Only used as last resort due to known .bik playback issues
 - **WPF Integration**: Use `WindowsFormsHost` to wrap a WinForms Panel
 - **Process Cleanup**: All video processes are terminated before game launch
-- **No More Stuck Windows**: FFmpeg embedding is much more reliable than BinkPlay
-- **Quality Trade-off**: Embedded mode uses FFmpeg instead of BinkPlay, but quality is still excellent
+- **Quality Priority**: Native .bik players (Bink SDK, RAD Tools) always preferred over FFmpeg
+- **Broken Playback Warning**: If you see corrupted video, FFmpeg is being used - install RAD Video Tools for proper playback
