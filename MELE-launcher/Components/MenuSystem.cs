@@ -18,14 +18,22 @@ namespace MassEffectLauncher.Components
         private List<MenuItem> _menuItems;
         private MenuState _currentState;
         
-        // Input System State
+        // Input & Terminal System State
         private bool _isInputMode;
+        private bool _keepInputOpen; // Keeps terminal open after command
         private StringBuilder _inputBuffer;
         private string _inputPrompt;
-        private Action<string> _onInputComplete;
+        
+        // Handlers for Input
+        private Action<string> _onInputComplete;       // For one-off inputs (Paths)
+        private Func<string, string> _commandExecutor; // For persistent shell (Commands)
+        
+        // Terminal History (Type, Message)
+        private List<(string prefix, string text, Color color)> _terminalHistory;
+        private const int MAX_HISTORY = 8;
         
         // Command System
-        private CommandExecutor _commandExecutor;
+        private CommandExecutor _commandExecutorInstance;
         #endregion
 
         #region Configuration & Context
@@ -64,10 +72,15 @@ namespace MassEffectLauncher.Components
             
             // Input System Init
             _isInputMode = false;
+            _keepInputOpen = false;
             _inputBuffer = new StringBuilder();
+            _terminalHistory = new List<(string, string, Color)>();
             
             // Command System Init
-            _commandExecutor = new CommandExecutor();
+            _commandExecutorInstance = new CommandExecutor();
+            
+            // Wire up command executor
+            _commandExecutor = (cmd) => ExecuteCommandWithLogging(cmd);
         }
 
         #region Initialization & Configuration
@@ -112,7 +125,94 @@ namespace MassEffectLauncher.Components
             Action<DetectedGame, LaunchOptions> onLaunchGame,
             Func<LauncherConfig> getConfig)
         {
-            _commandExecutor.RegisterCallbacks(onRescan, onExit, onSettings, getDetectedGames, onLaunchGame, getConfig);
+            _commandExecutorInstance.RegisterCallbacks(onRescan, onExit, onSettings, getDetectedGames, onLaunchGame, getConfig);
+        }
+
+        /// <summary>
+        /// Opens the persistent Command Terminal (Shell).
+        /// </summary>
+        public void ToggleCommandTerminal()
+        {
+            if (_isInputMode)
+            {
+                // Close if open
+                _isInputMode = false;
+                _keepInputOpen = false;
+            }
+            else
+            {
+                // Open persistent shell
+                _isInputMode = true;
+                _keepInputOpen = true;
+                _inputPrompt = "CMD >";
+                _inputBuffer.Clear();
+                _onInputComplete = null; // We use _commandExecutor instead
+                
+                // Welcome message in log
+                if (_terminalHistory.Count == 0)
+                    LogToTerminal("Systems Alliance Terminal v2.1 initialized...", _theme.Muted);
+            }
+        }
+
+        private void ActivateOneOffInput(string prompt, Action<string> onComplete)
+        {
+            _isInputMode = true;
+            _keepInputOpen = false;
+            _inputPrompt = prompt;
+            _onInputComplete = onComplete;
+            _inputBuffer.Clear();
+        }
+
+        private void LogToTerminal(string text, Color color)
+        {
+            _terminalHistory.Add(("", text, color));
+            
+            // Keep history trimmed
+            if (_terminalHistory.Count > MAX_HISTORY)
+            {
+                _terminalHistory.RemoveAt(0);
+            }
+        }
+
+        /// <summary>
+        /// Executes a command and logs the result to terminal history.
+        /// </summary>
+        private string ExecuteCommandWithLogging(string commandLine)
+        {
+            var result = _commandExecutorInstance.Execute(commandLine);
+            
+            // Handle special commands
+            if (result == "[CLEAR]")
+            {
+                _terminalHistory.Clear();
+                return null;
+            }
+            
+            // Log result to terminal if there's output
+            if (!string.IsNullOrEmpty(result))
+            {
+                // Split multi-line output and add each line separately
+                var lines = result.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                
+                foreach (var line in lines)
+                {
+                    // Determine color based on content
+                    Color msgColor = Color.White;
+                    
+                    if (line.Contains("[red]") || line.Contains("ERROR") || line.Contains("CRITICAL"))
+                        msgColor = Color.Red;
+                    else if (line.Contains("[green]") || line.Contains("SUCCESS") || line.Contains("OK"))
+                        msgColor = Color.Green;
+                    else if (line.Contains("[yellow]") || line.Contains("WARN"))
+                        msgColor = Color.Yellow;
+                    else if (line.Contains("[cyan]") || line.Contains("INFO"))
+                        msgColor = _theme.Accent;
+                    
+                    LogToTerminal(line, msgColor);
+                }
+            }
+            
+            return result;
         }
 
         /// <summary>
@@ -230,7 +330,7 @@ namespace MassEffectLauncher.Components
             // 1. INPUT MODE (Typing in the bottom bar)
             if (_isInputMode)
             {
-                HandleTextInput(key);
+                HandleTerminalInput(key);
                 return;
             }
 
@@ -263,6 +363,15 @@ namespace MassEffectLauncher.Components
                     HandleBack(); 
                     break;
                 
+                // Terminal Toggle: ~ or F1
+                case ConsoleKey.Oem3: // ~ key
+                    ToggleCommandTerminal();
+                    break;
+                
+                case ConsoleKey.F1:
+                    ToggleCommandTerminal();
+                    break;
+                
                 // Shortcut: Ctrl+F to Search/Command (Extensibility)
                 case ConsoleKey.F: 
                     if ((key.Modifiers & ConsoleModifiers.Control) != 0) 
@@ -271,30 +380,64 @@ namespace MassEffectLauncher.Components
             }
         }
 
-        private void HandleTextInput(ConsoleKeyInfo key)
+       private void HandleTerminalInput(ConsoleKeyInfo key)
+{
+    if (key.Key == ConsoleKey.Enter)
+    {
+        string rawInput = _inputBuffer.ToString();
+        _inputBuffer.Clear();
+
+        // 1. Sanitize user input immediately so it renders safely as markup later
+        // We only escape the user's text. System messages will retain their markup.
+        string safeCommand = rawInput.Replace("[", "[[").Replace("]", "]]");
+
+        if (_keepInputOpen && _commandExecutor != null)
         {
-            if (key.Key == ConsoleKey.Enter)
+            // Log the command (User's input)
+            // We use the 'safeCommand' here so it doesn't break rendering
+            LogToTerminal($"{_inputPrompt} {safeCommand}", _theme.Accent);
+            
+            // Execute the raw command (The executor needs the real text)
+            if (!string.IsNullOrWhiteSpace(rawInput))
             {
-                _isInputMode = false;
-                string result = _inputBuffer.ToString();
-                _inputBuffer.Clear();
-                _onInputComplete?.Invoke(result);
-            }
-            else if (key.Key == ConsoleKey.Escape)
-            {
-                _isInputMode = false;
-                _inputBuffer.Clear();
-            }
-            else if (key.Key == ConsoleKey.Backspace)
-            {
-                if (_inputBuffer.Length > 0) 
-                    _inputBuffer.Length--;
-            }
-            else if (!char.IsControl(key.KeyChar))
-            {
-                _inputBuffer.Append(key.KeyChar);
+                _commandExecutor(rawInput);
             }
         }
+        else
+        {
+            _isInputMode = false;
+            _onInputComplete?.Invoke(rawInput);
+        }
+    }
+    // ... [Rest of the method remains the same] ...
+    else if (key.Key == ConsoleKey.Escape)
+    {
+        _isInputMode = false;
+        _keepInputOpen = false;
+        _inputBuffer.Clear();
+    }
+    else if (key.Key == ConsoleKey.Backspace)
+    {
+        if (_inputBuffer.Length > 0) 
+            _inputBuffer.Length--;
+    }
+    else if (key.Key == ConsoleKey.Oem3 && _keepInputOpen) 
+    {
+        _isInputMode = false;
+        _keepInputOpen = false;
+        _inputBuffer.Clear();
+    }
+    else if (key.Key == ConsoleKey.F1 && _keepInputOpen) 
+    {
+        _isInputMode = false;
+        _keepInputOpen = false;
+        _inputBuffer.Clear();
+    }
+    else if (!char.IsControl(key.KeyChar))
+    {
+        _inputBuffer.Append(key.KeyChar);
+    }
+}
 
         private void ActivateInputMode(string prompt, Action<string> onComplete)
         {
@@ -314,7 +457,7 @@ namespace MassEffectLauncher.Components
                 return; // Empty command, just return to normal mode
             }
 
-            var result = _commandExecutor.Execute(commandLine);
+            var result = _commandExecutorInstance.Execute(commandLine);
             
             // If there's a result message, show it
             if (!string.IsNullOrEmpty(result))
@@ -381,15 +524,24 @@ namespace MassEffectLauncher.Components
             {
                 if (_isInputMode)
                 {
-                    // Command Mode: Show only header and centered input box
+                    // Input Mode (both command and terminal): Show only header and centered panel
                     var rootLayout = new Layout("Root")
                         .SplitRows(
                             new Layout("Header").Size(4),
-                            new Layout("CommandArea")  // Full height for centered input
+                            new Layout("CommandArea")  // Full height for centered input/terminal
                         );
 
                     rootLayout["Header"].Update(RenderHeader());
-                    rootLayout["CommandArea"].Update(RenderCenteredCommandInput());
+                    
+                    // Use terminal panel if persistent mode, otherwise centered input
+                    if (_keepInputOpen)
+                    {
+                        rootLayout["CommandArea"].Update(RenderCenteredTerminal());
+                    }
+                    else
+                    {
+                        rootLayout["CommandArea"].Update(RenderCenteredCommandInput());
+                    }
 
                     AnsiConsole.Clear();
                     AnsiConsole.Write(rootLayout);
@@ -574,7 +726,7 @@ namespace MassEffectLauncher.Components
             string modeColor = _isAdmin ? "red" : "orange1";
             grid.AddRow(
                 new Markup($" [{modeColor}]{modeText}[/] [dim]Ready[/]"), 
-                new Markup("[dim]↑/↓[/] [cyan]Nav[/] [dim]HOME/END[/] [cyan]Jump[/] [dim]Ent[/] [cyan]Sel[/] [dim]Esc[/] [cyan]Back[/] [dim]Ctrl+F[/] [cyan]Cmd[/]")
+                new Markup("[dim]↑/↓[/] [cyan]Nav[/] [dim]Ent[/] [cyan]Sel[/] [dim]Esc[/] [cyan]Back[/] [dim]~/F1[/] [cyan]Term[/]")
             );
 
             return new Panel(grid) 
@@ -585,14 +737,12 @@ namespace MassEffectLauncher.Components
             };
         }
 
-       /// <summary>
-/// Renders a centered command input box for command mode.
+      /// <summary>
+/// Renders a centered command input box anchored to the bottom edge.
 /// </summary>
 private IRenderable RenderCenteredCommandInput()
 {
-    // 1. Construct the Input Display Line
-    // We check if the buffer is empty to show a 'ghost' hint if needed, 
-    // or just the cursor.
+    // 1. Prepare Input String
     string inputLine;
     if (_inputBuffer.Length == 0)
     {
@@ -600,42 +750,149 @@ private IRenderable RenderCenteredCommandInput()
     }
     else
     {
-        // Escape markup in user input to prevent crashing if they type "[red]" etc.
+        // Sanitize user input to prevent markup errors (e.g. typing "[Error]")
         string safeBuffer = _inputBuffer.ToString().Replace("[", "[[").Replace("]", "]]");
         inputLine = $"[bold {_theme.HighlightName}]{_inputPrompt}[/] [white]{safeBuffer}[/][blink {_theme.AccentName}]_[/]";
     }
 
-    // 2. Build the Content Grid
+    // 2. Build Content Grid
     var content = new Grid();
     content.AddColumn(new GridColumn().Centered());
 
-    // Icon / Header
-    content.AddRow(new Markup($"[bold {_theme.AccentName} underline]TERMINAL INTERFACE[/]"));
+    // Header (Fixed: Changed 'overline' to 'underline' to prevent crash)
+    content.AddRow(new Markup($"[bold {_theme.AccentName} underline]TERMINAL UPLINK[/]"));
     content.AddRow(new Text("")); // Spacer
 
-    // The Input Line (Big and clear)
+    // Input Line
     content.AddRow(new Markup(inputLine));
     
-    content.AddRow(new Text("")); // Spacer
-    
-    // Instructions / Separator
-    content.AddRow(new Rule { Style = new Style(_theme.Muted) });
-    content.AddRow(new Markup("[dim]Press [/][cyan]ENTER[/][dim] to execute • [/][orange1]ESC[/][dim] to cancel[/]"));
+    // Minimalist Footer
+    content.AddRow(new Text("")); 
+    content.AddRow(new Markup("[dim]ENTER to Confirm • ESC to Abort[/]"));
 
-    // 3. Wrap in a High-Tech Panel
+    // 3. Create the Panel
     var panel = new Panel(content)
     {
-        Border = BoxBorder.Rounded, // Rounded looks more modern/sci-fi
-        BorderStyle = new Style(_theme.Highlight), // Glowing border color
+        Border = BoxBorder.Double,
+        BorderStyle = new Style(_theme.Highlight),
         Padding = new Padding(4, 1, 4, 1),
-        Width = 70 
+        Width = 90
     };
 
-    // 4. Use Align.Center to perfectly center it in the available space
-    // This removes the need for magic number padding
-    return Align.Center(panel, VerticalAlignment.Middle);
+    // 4. Align to Bottom-Center
+    // We wrap the panel in a Padder with bottom padding (2 lines) 
+    // so it doesn't touch the very edge of the window.
+    return Align.Center(
+        new Padder(panel, new Padding(0, 0, 0, 2)), 
+        VerticalAlignment.Bottom
+    );
 }
 
+     private IRenderable RenderCenteredTerminal()
+{
+    // 1. Build Content
+    var content = new Grid();
+    content.AddColumn(new GridColumn().Centered());
+
+    // Header
+    content.AddRow(new Markup($"[bold {_theme.AccentName} underline]TERMINAL UPLINK[/]"));
+    content.AddRow(new Text(""));
+
+    // 2. Input Line
+    string inputLine;
+    if (_inputBuffer.Length == 0)
+    {
+        inputLine = $"[bold {_theme.HighlightName}]{_inputPrompt}[/] [dim italic]Awaiting instructions...[/][blink {_theme.AccentName}]_[/]";
+    }
+    else
+    {
+        // Sanitize visual buffer just for this frame
+        string safeBuffer = _inputBuffer.ToString().Replace("[", "[[").Replace("]", "]]");
+        inputLine = $"[bold {_theme.HighlightName}]{_inputPrompt}[/] [white]{safeBuffer}[/][blink {_theme.AccentName}]_[/]";
+    }
+    content.AddRow(new Markup(inputLine));
+
+    // Separator
+    content.AddRow(new Text(""));
+    content.AddRow(new Rule { Style = new Style(_theme.Muted) });
+
+    // 3. History Grid (The Fix: Remove the .Replace calls here!)
+    var historyGrid = new Grid();
+    historyGrid.AddColumn(new GridColumn().PadLeft(2).NoWrap());
+
+    if (_terminalHistory.Count > 0)
+    {
+        foreach (var (prefix, text, color) in _terminalHistory)
+        {
+            // CRITICAL FIX: We do NOT escape 'text' here. 
+            // We assume it contains valid markup from the CommandExecutor.
+            // User input was already escaped in HandleTerminalInput.
+            
+            var colorName = GetColorName(color);
+
+            if (!string.IsNullOrEmpty(prefix))
+            {
+                // Prefix + Text
+                historyGrid.AddRow(new Markup($"[{colorName}]{prefix}[/] {text}"));
+            }
+            else
+            {
+                // Text only (handles complex markup from help/list commands)
+                // We wrap it in a color tag only if the text doesn't start with one
+                if (text.TrimStart().StartsWith("["))
+                {
+                     historyGrid.AddRow(new Markup(text));
+                }
+                else
+                {
+                     historyGrid.AddRow(new Markup($"[{colorName}]{text}[/]"));
+                }
+            }
+        }
+    }
+    else
+    {
+        historyGrid.AddRow(new Markup($"[dim]Systems Alliance Terminal v2.1 initialized...[/]"));
+    }
+    
+    content.AddRow(historyGrid);
+
+    // 4. Footer
+    content.AddRow(new Text(""));
+    content.AddRow(new Markup("[dim]ENTER to Execute • ~ to Minimize • ESC to Close[/]"));
+
+    // 5. Container Panel
+    var panel = new Panel(content)
+    {
+        Border = BoxBorder.Double,
+        BorderStyle = new Style(_theme.Highlight),
+        Padding = new Padding(2, 1, 2, 1),
+        Width = 100
+    };
+
+    // 6. Bottom Alignment
+    // The Padder ensures it sits 2 lines up from the absolute bottom edge
+    return Align.Center(
+        new Padder(panel, new Padding(0, 0, 0, 2)), 
+        VerticalAlignment.Bottom
+    );
+}
+
+        /// <summary>
+        /// Helper to get color name string from Color object.
+        /// </summary>
+        private string GetColorName(Color color)
+        {
+            if (color == _theme.Accent) return _theme.AccentName;
+            if (color == _theme.Secondary) return _theme.SecondaryName;
+            if (color == _theme.Highlight) return _theme.HighlightName;
+            if (color == _theme.Muted) return "grey39";
+            if (color == Color.Green) return "green";
+            if (color == Color.Red) return "red";
+            if (color == Color.Yellow) return "yellow";
+            if (color == Color.Orange1) return "orange1";
+            return "white";
+        }
         #endregion
 
         #region UI Component Helpers
@@ -1286,7 +1543,7 @@ private IRenderable RenderCenteredCommandInput()
         // Visual Theme Struct
         private class Theme
         {
-            public Color Primary, Secondary, Accent, Muted, Highlight, Border;
+            public Color Primary, Secondary, Accent, Muted, Highlight, Border, Alert;
             public string SecondaryName, AccentName, HighlightName;
 
             public Theme() => SetStandardMode();
@@ -1299,6 +1556,7 @@ private IRenderable RenderCenteredCommandInput()
                 Muted = Color.Grey39; 
                 Highlight = Color.Cyan1; 
                 Border = Color.SlateBlue3;
+                Alert = Color.Orange1;
                 SecondaryName = "slateBlue1"; 
                 AccentName = "cyan1"; 
                 HighlightName = "cyan1";
@@ -1312,6 +1570,7 @@ private IRenderable RenderCenteredCommandInput()
                 Muted = Color.Grey39; 
                 Highlight = Color.Orange1; 
                 Border = Color.Red3;
+                Alert = Color.Red;
                 SecondaryName = "orange1"; 
                 AccentName = "red1"; 
                 HighlightName = "orange1";

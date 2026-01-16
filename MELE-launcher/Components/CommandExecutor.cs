@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text;
 using MELE_launcher.Models;
 using Spectre.Console;
 using Spectre.Console.Rendering;
@@ -15,7 +16,8 @@ namespace MELE_launcher.Components
     public class CommandExecutor
     {
         private readonly CommandRegistry _registry;
-        private readonly Dictionary<string, Action<string[], CommandDefinition>> _builtInHandlers;
+        // Changed to Func to return string output instead of void
+        private readonly Dictionary<string, Func<string[], CommandDefinition, string>> _builtInHandlers;
         
         // Callbacks for built-in actions
         private Action _onRescan;
@@ -25,10 +27,13 @@ namespace MELE_launcher.Components
         private Action<DetectedGame, LaunchOptions> _onLaunchGame;
         private Func<LauncherConfig> _getConfig;
 
+        // Visual Theme (Matches MenuSystem)
+        private readonly Theme _theme = new Theme();
+
         public CommandExecutor()
         {
             _registry = new CommandRegistry();
-            _builtInHandlers = new Dictionary<string, Action<string[], CommandDefinition>>();
+            _builtInHandlers = new Dictionary<string, Func<string[], CommandDefinition, string>>();
             
             RegisterBuiltInHandlers();
             LoadCommandDefinitions();
@@ -57,19 +62,19 @@ namespace MELE_launcher.Components
         /// Executes a command string.
         /// </summary>
         /// <param name="commandLine">The full command line entered by the user.</param>
-        /// <returns>Result message to display to the user.</returns>
+        /// <returns>Result message to display in the terminal log.</returns>
         public string Execute(string commandLine)
         {
             if (string.IsNullOrWhiteSpace(commandLine))
             {
-                return "No command entered.";
+                return null; 
             }
 
             // Parse command and arguments
             var parts = ParseCommandLine(commandLine);
             if (parts.Length == 0)
             {
-                return "Invalid command.";
+                return null;
             }
 
             var commandName = parts[0].ToLower();
@@ -80,12 +85,12 @@ namespace MELE_launcher.Components
             
             if (command == null)
             {
-                return $"Unknown command: '{commandName}'. Type 'help' for available commands.";
+                return $"[red]ERR:[/] Unknown directive '{commandName}'. Type [cyan]help[/] for protocol list.";
             }
 
             if (!command.Enabled)
             {
-                return $"Command '{commandName}' is currently disabled.";
+                return $"[orange1]WARN:[/] Module '{commandName}' is offline.";
             }
 
             // Execute the command
@@ -93,17 +98,16 @@ namespace MELE_launcher.Components
             {
                 if (!string.IsNullOrEmpty(command.ActionType) && _builtInHandlers.ContainsKey(command.ActionType))
                 {
-                    _builtInHandlers[command.ActionType](args, command);
-                    return null; // Built-in handlers manage their own output
+                    return _builtInHandlers[command.ActionType](args, command);
                 }
                 else
                 {
-                    return $"Command '{commandName}' has no handler defined.";
+                    return $"[red]ERR:[/] Command '{commandName}' has no handler definition.";
                 }
             }
             catch (Exception ex)
             {
-                return $"Error executing command: {ex.Message}";
+                return $"[red]CRITICAL FAULT:[/] {ex.Message}";
             }
         }
 
@@ -122,11 +126,11 @@ namespace MELE_launcher.Components
             {
                 if (args.Length > 0)
                 {
-                    ShowCommandHelp(args[0]);
+                    return GetCommandHelpText(args[0]);
                 }
                 else
                 {
-                    ShowAllCommands();
+                    return GetAllCommandsText();
                 }
             };
 
@@ -137,72 +141,59 @@ namespace MELE_launcher.Components
                 
                 if (games.Count == 0)
                 {
-                    AnsiConsole.MarkupLine("[yellow]No games detected.[/]");
-                }
-                else
-                {
-                    var table = new Table();
-                    table.AddColumn("Game");
-                    table.AddColumn("Edition");
-                    table.AddColumn("Status");
-                    
-                    foreach (var game in games.OrderBy(g => g.Edition).ThenBy(g => g.Type))
-                    {
-                        var status = game.IsValid ? "[green]✓ Installed[/]" : "[red]✗ Missing[/]";
-                        table.AddRow(game.Name, game.Edition.ToString(), status);
-                    }
-                    
-                    AnsiConsole.Write(table);
+                    return "[yellow]No Mass Effect modules detected in local file system.[/]";
                 }
                 
-                AnsiConsole.MarkupLine("\n[dim]Press any key to continue...[/]");
-                Console.ReadKey(true);
+                var sb = new StringBuilder();
+                sb.AppendLine($"[bold {_theme.HighlightName}]INSTALLED MODULES:[/]");
+                
+                int index = 1;
+                foreach (var game in games.OrderBy(g => g.Edition).ThenBy(g => g.Type))
+                {
+                    var status = game.IsValid ? "[green]READY[/]" : "[red]MISSING[/]";
+                    sb.AppendLine($"  [cyan]{index}[/] [bold white]{game.Name}[/] - {status}");
+                    index++;
+                }
+                
+                sb.Append($"\n[dim]Use [white]launch <id>[/] to initialize specific module.[/]");
+                return sb.ToString();
             };
 
             // Rescan
             _builtInHandlers["rescan"] = (args, cmd) =>
             {
                 _onRescan?.Invoke();
+                return "[green]Detection sensors refreshed.[/]";
             };
 
             // Settings
             _builtInHandlers["settings"] = (args, cmd) =>
             {
                 _onSettings?.Invoke();
+                // We return null because the settings menu will take over the UI rendering
+                return "[cyan]Opening configuration parameters...[/]";
             };
 
             // Exit
             _builtInHandlers["exit"] = (args, cmd) =>
             {
                 _onExit?.Invoke();
+                return "[red]Terminating session...[/]";
             };
 
             // Clear screen
             _builtInHandlers["clear"] = (args, cmd) =>
             {
-                AnsiConsole.Clear();
-                AnsiConsole.MarkupLine("[green]Screen cleared.[/]");
-                System.Threading.Thread.Sleep(500);
+                return "[CLEAR]"; // Special token handled by MenuSystem
             };
 
             // Version info
             _builtInHandlers["version"] = (args, cmd) =>
             {
-                AnsiConsole.Clear();
-                var panel = new Panel(new Markup(
-                    "[bold cyan]Mass Effect Legendary Launcher[/]\n" +
-                    "[dim]Version:[/] 2.1.0\n" +
-                    "[dim]Command System:[/] v1.0\n" +
-                    "[dim]Platform:[/] .NET 6.0"))
-                {
-                    Border = BoxBorder.Rounded,
-                    BorderStyle = new Style(Color.Cyan1),
-                    Header = new PanelHeader(" [bold]VERSION INFO[/] ")
-                };
-                
-                AnsiConsole.Write(panel);
-                AnsiConsole.MarkupLine("\n[dim]Press any key to continue...[/]");
-                Console.ReadKey(true);
+                var sb = new StringBuilder();
+                sb.AppendLine("[bold cyan]MASS EFFECT LEGENDARY LAUNCHER[/]");
+                sb.AppendLine($"[dim]Version 2.1.0 RC • .NET 6.0 • {Environment.OSVersion}[/]");
+                return sb.ToString();
             };
 
             // Launch game
@@ -210,19 +201,12 @@ namespace MELE_launcher.Components
             {
                 if (args.Length == 0)
                 {
-                    AnsiConsole.MarkupLine("[red]Error: Game number required (1, 2, or 3)[/]");
-                    AnsiConsole.MarkupLine("[dim]Usage: launch <1|2|3>[/]");
-                    AnsiConsole.MarkupLine("\n[dim]Press any key to continue...[/]");
-                    Console.ReadKey(true);
-                    return;
+                    return $"[{_theme.Alert}]ERROR:[/] Target designation required.\n[dim]Usage: launch <1|2|3>[/]";
                 }
 
                 if (!int.TryParse(args[0], out int gameNum) || gameNum < 1 || gameNum > 3)
                 {
-                    AnsiConsole.MarkupLine("[red]Invalid game number. Use 1, 2, or 3.[/]");
-                    AnsiConsole.MarkupLine("\n[dim]Press any key to continue...[/]");
-                    Console.ReadKey(true);
-                    return;
+                    return $"[{_theme.Alert}]ERROR:[/] Invalid target designation. Use 1, 2, or 3.";
                 }
 
                 // Find the game
@@ -232,20 +216,12 @@ namespace MELE_launcher.Components
 
                 if (game == null)
                 {
-                    AnsiConsole.MarkupLine($"[red]Mass Effect {gameNum} Legendary Edition not found.[/]");
-                    AnsiConsole.MarkupLine("[yellow]Run 'scan' to search for games.[/]");
-                    AnsiConsole.MarkupLine("\n[dim]Press any key to continue...[/]");
-                    Console.ReadKey(true);
-                    return;
+                    return $"[{_theme.Alert}]ERROR:[/] Module ME{gameNum} not found. Run [white]scan[/] to update database.";
                 }
 
                 if (!game.IsValid)
                 {
-                    AnsiConsole.MarkupLine($"[red]Mass Effect {gameNum} installation is invalid.[/]");
-                    AnsiConsole.MarkupLine($"[dim]Path: {game.Path}[/]");
-                    AnsiConsole.MarkupLine("\n[dim]Press any key to continue...[/]");
-                    Console.ReadKey(true);
-                    return;
+                    return $"[{_theme.Alert}]CRITICAL:[/] Integrity check failed for ME{gameNum}.";
                 }
 
                 // Get configuration for the game
@@ -262,117 +238,60 @@ namespace MELE_launcher.Components
                     Silent = false
                 };
 
-                // Show launch info
-                AnsiConsole.Clear();
-                var textLang = LocaleMapper.GetLanguageOption(launchOptions.Locale).DisplayName;
-                var voiceLang = LocaleMapper.GetLanguageOption(launchOptions.VoiceLanguage).DisplayName;
-                var hasNativeVO = LocaleMapper.HasNativeVoiceOver(launchOptions.VoiceLanguage, game.Type);
-                var voiceType = hasNativeVO ? "Native" : "English";
-
-                var launchPanel = new Panel(new Markup(
-                    $"[cyan bold]LAUNCHING GAME[/]\n\n" +
-                    $"[white]Game:[/] {game.Name}\n" +
-                    $"[white]Text:[/] {textLang}\n" +
-                    $"[white]Voice:[/] {voiceLang} ({voiceType} VO)\n" +
-                    $"[white]Rumble:[/] {(launchOptions.ForceFeedback ? "ON" : "OFF")}"))
-                {
-                    Border = BoxBorder.Heavy,
-                    BorderStyle = new Style(Color.Cyan1),
-                    Header = new PanelHeader(" [bold]COMMAND LAUNCH[/] ")
-                };
-
-                AnsiConsole.Write(launchPanel);
-                AnsiConsole.WriteLine();
-
-                // Launch the game
+                // Trigger launch callback
                 _onLaunchGame?.Invoke(game, launchOptions);
+                
+                // Return a nice log message
+                var textLang = LocaleMapper.GetLanguageOption(launchOptions.Locale).DisplayName;
+                return $"[green]SUCCESS:[/] Initiating [bold white]{game.Name}[/]\n[dim]Profile: {textLang}[/]";
             };
         }
 
-        private void ShowAllCommands()
+        private string GetAllCommandsText()
         {
-            AnsiConsole.Clear();
+            var sb = new StringBuilder();
+            sb.AppendLine($"[bold {_theme.AccentName}]SYSTEM COMMAND REGISTRY[/]");
             
             var commands = GetAvailableCommands();
             var grouped = commands.GroupBy(c => c.Category ?? "General");
 
-            AnsiConsole.MarkupLine("[bold cyan]Available Commands[/]\n");
-
             foreach (var group in grouped.OrderBy(g => g.Key))
             {
-                AnsiConsole.MarkupLine($"[bold yellow]{group.Key}[/]");
+                sb.AppendLine();
+                sb.AppendLine($"[bold underline]{group.Key.ToUpper()}[/]");
                 
-                var table = new Table().NoBorder().HideHeaders();
-                table.AddColumn("Command");
-                table.AddColumn("Description");
-
                 foreach (var cmd in group)
                 {
-                    var aliases = cmd.Aliases.Count > 0 ? $" ({string.Join(", ", cmd.Aliases)})" : "";
-                    table.AddRow(
-                        new Markup($"  [cyan]{cmd.Name}{aliases}[/]"),
-                        new Text(cmd.Description ?? "")
-                    );
+                    var aliases = cmd.Aliases.Count > 0 ? $" ({string.Join(",", cmd.Aliases)})" : "";
+                    sb.AppendLine($"  [cyan]{cmd.Name}[/][dim]{aliases}[/] - {cmd.Description}");
                 }
-
-                AnsiConsole.Write(table);
-                AnsiConsole.WriteLine();
             }
 
-            AnsiConsole.MarkupLine("[dim]Type 'help <command>' for detailed information about a specific command.[/]");
-            AnsiConsole.MarkupLine("[dim]Press any key to continue...[/]");
-            Console.ReadKey(true);
+            return sb.ToString();
         }
 
-        private void ShowCommandHelp(string commandName)
+        private string GetCommandHelpText(string commandName)
         {
-            AnsiConsole.Clear();
-            
             var command = FindCommand(commandName);
             
             if (command == null)
             {
-                AnsiConsole.MarkupLine($"[red]Unknown command: '{commandName}'[/]");
-                AnsiConsole.MarkupLine("\n[dim]Press any key to continue...[/]");
-                Console.ReadKey(true);
-                return;
+                return $"[{_theme.Alert}]ERROR:[/] Unknown directive '{commandName}'";
             }
 
-            var content = new List<IRenderable>();
-            
-            content.Add(new Markup($"[bold cyan]{command.Name}[/]"));
-            
-            if (command.Aliases.Count > 0)
-            {
-                content.Add(new Markup($"[dim]Aliases:[/] {string.Join(", ", command.Aliases)}"));
-            }
-            
-            content.Add(new Text(""));
-            content.Add(new Markup($"[white]{command.Description ?? "No description available."}[/]"));
+            var sb = new StringBuilder();
+            sb.AppendLine($"[bold cyan]{command.Name.ToUpper()}[/] - {command.Description}");
             
             if (!string.IsNullOrEmpty(command.Usage))
-            {
-                content.Add(new Text(""));
-                content.Add(new Markup($"[dim]Usage:[/] [cyan]{command.Usage}[/]"));
-            }
+                sb.AppendLine($"[dim]Usage:[/]  [white]{command.Usage}[/]");
+            
+            if (command.Aliases.Count > 0)
+                sb.AppendLine($"[dim]Aliases:[/] {string.Join(", ", command.Aliases)}");
             
             if (command.RequiresAdmin)
-            {
-                content.Add(new Text(""));
-                content.Add(new Markup("[yellow]⚠ Requires administrator privileges[/]"));
-            }
+                sb.AppendLine($"[dim]Access:[/]  [{_theme.Alert}]ADMINISTRATOR[/]");
 
-            var panel = new Panel(new Rows(content))
-            {
-                Border = BoxBorder.Rounded,
-                BorderStyle = new Style(Color.Cyan1),
-                Header = new PanelHeader(" [bold]COMMAND HELP[/] "),
-                Padding = new Padding(2, 1, 2, 1)
-            };
-
-            AnsiConsole.Write(panel);
-            AnsiConsole.MarkupLine("\n[dim]Press any key to continue...[/]");
-            Console.ReadKey(true);
+            return sb.ToString();
         }
 
         private CommandDefinition FindCommand(string name)
@@ -385,17 +304,13 @@ namespace MELE_launcher.Components
 
         private string[] ParseCommandLine(string commandLine)
         {
-            // Simple parsing - split by spaces, respecting quotes
             var parts = new List<string>();
             var current = "";
             var inQuotes = false;
 
             foreach (var ch in commandLine)
             {
-                if (ch == '"')
-                {
-                    inQuotes = !inQuotes;
-                }
+                if (ch == '"') inQuotes = !inQuotes;
                 else if (ch == ' ' && !inQuotes)
                 {
                     if (!string.IsNullOrEmpty(current))
@@ -404,26 +319,17 @@ namespace MELE_launcher.Components
                         current = "";
                     }
                 }
-                else
-                {
-                    current += ch;
-                }
+                else current += ch;
             }
 
-            if (!string.IsNullOrEmpty(current))
-            {
-                parts.Add(current);
-            }
-
+            if (!string.IsNullOrEmpty(current)) parts.Add(current);
             return parts.ToArray();
         }
 
         private void LoadCommandDefinitions()
         {
-            // Load built-in commands
             LoadBuiltInCommands();
 
-            // Try to load custom commands from JSON
             var customCommandsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "commands.json");
             
             if (File.Exists(customCommandsPath))
@@ -438,23 +344,15 @@ namespace MELE_launcher.Components
 
                     if (customRegistry != null && customRegistry.Commands != null)
                     {
-                        // Merge custom commands (they can override built-in ones)
                         foreach (var customCmd in customRegistry.Commands)
                         {
                             var existing = _registry.Commands.FirstOrDefault(c => c.Name == customCmd.Name);
-                            if (existing != null)
-                            {
-                                _registry.Commands.Remove(existing);
-                            }
+                            if (existing != null) _registry.Commands.Remove(existing);
                             _registry.Commands.Add(customCmd);
                         }
                     }
                 }
-                catch (Exception ex)
-                {
-                    // Silently fail - custom commands are optional
-                    Console.WriteLine($"Warning: Could not load custom commands: {ex.Message}");
-                }
+                catch { /* Ignore errors in custom commands */ }
             }
         }
 
@@ -462,79 +360,29 @@ namespace MELE_launcher.Components
         {
             _registry.Commands.AddRange(new[]
             {
-                new CommandDefinition
-                {
-                    Name = "help",
-                    Aliases = new List<string> { "?", "h" },
-                    Description = "Display help information about commands",
-                    Usage = "help [command]",
-                    Category = "System",
-                    ActionType = "help"
-                },
-                new CommandDefinition
-                {
-                    Name = "list",
-                    Aliases = new List<string> { "ls", "games" },
-                    Description = "List all detected Mass Effect games",
-                    Usage = "list",
-                    Category = "Game",
-                    ActionType = "list_games"
-                },
-                new CommandDefinition
-                {
-                    Name = "launch",
-                    Aliases = new List<string> { "play", "start" },
-                    Description = "Quick launch a game by number (1=ME1, 2=ME2, 3=ME3)",
-                    Usage = "launch <1|2|3>",
-                    Category = "Game",
-                    ActionType = "launch_game"
-                },
-                new CommandDefinition
-                {
-                    Name = "scan",
-                    Aliases = new List<string> { "rescan", "refresh" },
-                    Description = "Rescan for Mass Effect game installations",
-                    Usage = "scan",
-                    Category = "Game",
-                    ActionType = "rescan"
-                },
-                new CommandDefinition
-                {
-                    Name = "settings",
-                    Aliases = new List<string> { "config", "preferences" },
-                    Description = "Open settings menu",
-                    Usage = "settings",
-                    Category = "System",
-                    ActionType = "settings"
-                },
-                new CommandDefinition
-                {
-                    Name = "exit",
-                    Aliases = new List<string> { "quit", "q" },
-                    Description = "Exit the launcher",
-                    Usage = "exit",
-                    Category = "System",
-                    ActionType = "exit"
-                },
-                new CommandDefinition
-                {
-                    Name = "clear",
-                    Aliases = new List<string> { "cls" },
-                    Description = "Clear the screen",
-                    Usage = "clear",
-                    Category = "System",
-                    ActionType = "clear"
-                },
-                new CommandDefinition
-                {
-                    Name = "version",
-                    Aliases = new List<string> { "ver", "about" },
-                    Description = "Display version information",
-                    Usage = "version",
-                    Category = "System",
-                    ActionType = "version"
-                }
+                new CommandDefinition { Name = "help", Aliases = new List<string> { "?", "h" }, Description = "Display help protocol", Usage = "help [command]", Category = "System", ActionType = "help" },
+                new CommandDefinition { Name = "list", Aliases = new List<string> { "ls", "games" }, Description = "Query installed game modules", Usage = "list", Category = "Game", ActionType = "list_games" },
+                new CommandDefinition { Name = "launch", Aliases = new List<string> { "play", "start", "run" }, Description = "Initialize specific game module (1-3)", Usage = "launch <1|2|3>", Category = "Game", ActionType = "launch_game" },
+                new CommandDefinition { Name = "scan", Aliases = new List<string> { "rescan", "refresh" }, Description = "Refresh detection sensors", Usage = "scan", Category = "Game", ActionType = "rescan" },
+                new CommandDefinition { Name = "settings", Aliases = new List<string> { "config", "cfg" }, Description = "Modify system parameters", Usage = "settings", Category = "System", ActionType = "settings" },
+                new CommandDefinition { Name = "exit", Aliases = new List<string> { "quit", "q" }, Description = "Terminate session", Usage = "exit", Category = "System", ActionType = "exit" },
+                new CommandDefinition { Name = "clear", Aliases = new List<string> { "cls" }, Description = "Purge terminal display", Usage = "clear", Category = "System", ActionType = "clear" },
+                new CommandDefinition { Name = "version", Aliases = new List<string> { "ver", "about" }, Description = "System integrity check", Usage = "version", Category = "System", ActionType = "version" }
             });
+        }
+
+        private class Theme
+        {
+            public Color Primary = Color.White;
+            public Color Secondary = Color.SlateBlue1;
+            public Color Accent = Color.Cyan1;
+            public Color Muted = Color.Grey39;
+            public Color Highlight = Color.Cyan1;
+            public Color Alert = Color.Orange1;
+            
+            public string SecondaryName = "slateBlue1";
+            public string AccentName = "cyan1";
+            public string HighlightName = "cyan1";
         }
     }
 }
