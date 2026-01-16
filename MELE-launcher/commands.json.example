@@ -1,0 +1,31 @@
+{
+  "version": "1.0",
+  "commands": [
+    {
+      "name": "backup",
+      "aliases": ["save"],
+      "description": "Backup game saves",
+      "usage": "backup <game_number>",
+      "category": "Utility",
+      "enabled": false,
+      "requiresAdmin": false,
+      "actionType": "backup_saves",
+      "parameters": {
+        "note": "Custom command example - requires implementation"
+      }
+    },
+    {
+      "name": "mods",
+      "aliases": ["modlist"],
+      "description": "List installed mods",
+      "usage": "mods [game_number]",
+      "category": "Mods",
+      "enabled": false,
+      "requiresAdmin": false,
+      "actionType": "list_mods",
+      "parameters": {
+        "note": "Custom command example - requires implementation"
+      }
+    }
+  ]
+}

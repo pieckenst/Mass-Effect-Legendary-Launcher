@@ -50,6 +50,16 @@ namespace MELE_launcher
 				// Scan for games
 				ScanForGames();
 
+				// Register command system callbacks
+				_menuSystem.RegisterCommandCallbacks(
+					onRescan: () => ScanForGames(),
+					onExit: () => _shouldExit = true,
+					onSettings: () => ShowSettings(),
+					getDetectedGames: () => _detectedGames,
+					onLaunchGame: (game, options) => _menuSystem.LaunchGameWithFlow(game, options, _adminElevator, _gameLauncher),
+					getConfig: () => _menuSystem.GetConfig()
+				);
+
 				// Check if command-line arguments were provided
 				if (args.Length > 0)
 				{
@@ -72,7 +82,7 @@ namespace MELE_launcher
 			}
 			catch (Exception ex)
 			{
-				AnsiConsole.MarkupLine($"[red]Fatal error: {ex.Message}[/]");
+				AnsiConsole.MarkupLine($"[red]Fatal error: {ex.Message.EscapeMarkup()}[/]");
 				AnsiConsole.MarkupLine("[dim]Press any key to exit...[/]");
 				Console.ReadKey(true);
 			}
@@ -464,6 +474,7 @@ namespace MELE_launcher
 					Description = game.Path,
 					Type = MenuItemType.Game,
 					IsEnabled = true,
+					Tag = game,  // Add Tag for context panel
 					OnSelect = () => ShowGameOptions(capturedGame)
 				});
 			}
@@ -636,9 +647,9 @@ namespace MELE_launcher
 					// We just returned to main menu from a submenu - rebuild it
 					BuildMainMenu();
 				}
-				else if (currentState == MenuState.Main && key.Key == ConsoleKey.Escape)
+				else if (currentState == MenuState.Main && key.Key == ConsoleKey.Escape && !_menuSystem.IsInInputMode)
 				{
-					// User pressed Escape on main menu - confirm exit
+					// User pressed Escape on main menu (and not in input mode) - confirm exit
 					if (_menuSystem.ShowConfirmation("Are you sure you want to exit?"))
 					{
 						_shouldExit = true;

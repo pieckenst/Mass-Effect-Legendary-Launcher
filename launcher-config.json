@@ -25,9 +25,9 @@
       "ForceFeedback": false
     }
   ],
-  "DefaultLocale": "INT",
+  "DefaultLocale": "RU",
   "DefaultVoiceLanguage": "INT",
   "DefaultForceFeedback": false,
-  "DefaultSkipIntro": false,
-  "LastScanDate": "2026-01-16T14:12:37.1478552+03:00"
+  "DefaultSkipIntro": true,
+  "LastScanDate": "2026-01-16T15:37:41.2155063+03:00"
 }
