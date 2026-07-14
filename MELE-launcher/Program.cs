@@ -445,7 +445,18 @@ namespace MELE_launcher
 					{
 						config.Games.Remove(invalidGame);
 					}
-					_configManager.Save(config);
+
+					try
+					{
+						_configManager.Save(config);
+					}
+					catch (Exception ex)
+					{
+						System.Diagnostics.Debug.WriteLine($"Failed to save config after pruning invalid paths: {ex}");
+						_menuSystem.ShowMessage(
+							$"Could not update the saved configuration:\n{ex.Message}",
+							MessageType.Warning);
+					}
 
 					// Rescan
 					_menuSystem.ShowProgress("Rescanning for Mass Effect games...", () =>

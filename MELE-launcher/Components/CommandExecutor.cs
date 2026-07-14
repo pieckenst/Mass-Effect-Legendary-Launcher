@@ -352,7 +352,13 @@ namespace MELE_launcher.Components
                         }
                     }
                 }
-                catch { /* Ignore errors in custom commands */ }
+                catch (Exception ex)
+                {
+                    // A malformed commands.json should not crash startup, but the user
+                    // needs to know their custom commands were not loaded.
+                    Console.Error.WriteLine($"⚠ Could not load custom commands from '{customCommandsPath}': {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"CommandExecutor failed to load custom commands: {ex}");
+                }
             }
         }
 

@@ -127,9 +127,11 @@ namespace MELE_launcher.Components
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Silently fail if we can't access Steam paths
+                // Non-fatal: fall back to other detection sources, but record why
+                // Steam scanning was skipped for diagnostics.
+                System.Diagnostics.Debug.WriteLine($"GameDetector could not read Steam library paths: {ex}");
             }
 
             return paths;
@@ -159,9 +161,11 @@ namespace MELE_launcher.Components
 
                 paths.AddRange(eaPaths.Distinct().Where(Directory.Exists));
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Silently fail if we can't access EA paths
+                // Non-fatal: fall back to other detection sources, but record why
+                // EA/Origin scanning was skipped for diagnostics.
+                System.Diagnostics.Debug.WriteLine($"GameDetector could not read EA/Origin paths: {ex}");
             }
 
             return paths;
@@ -201,15 +205,18 @@ namespace MELE_launcher.Components
                             }
                         }
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        // Skip inaccessible registry keys
+                        // Skip inaccessible registry keys, but record which one failed.
+                        System.Diagnostics.Debug.WriteLine($"GameDetector could not read registry key '{keyPath}': {ex.Message}");
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Silently fail if we can't access registry
+                // Non-fatal: fall back to other detection sources, but record why
+                // registry scanning was skipped for diagnostics.
+                System.Diagnostics.Debug.WriteLine($"GameDetector could not read registry paths: {ex}");
             }
 
             return paths;
