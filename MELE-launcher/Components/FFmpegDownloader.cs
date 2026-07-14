@@ -39,6 +39,14 @@ namespace MELE_launcher.Components
                 using var httpClient = new HttpClient();
                 httpClient.Timeout = TimeSpan.FromMinutes(5); // 5 minute timeout
 
+                // Only ever fetch executable payloads over HTTPS.
+                if (!Uri.TryCreate(FFMPEG_URL, UriKind.Absolute, out var ffmpegUri) ||
+                    !string.Equals(ffmpegUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine("❌ Refusing to download FFmpeg from a non-HTTPS URL.");
+                    return null;
+                }
+
                 var response = await httpClient.GetAsync(FFMPEG_URL);
                 response.EnsureSuccessStatusCode();
 
