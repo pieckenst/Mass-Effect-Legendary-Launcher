@@ -2,8 +2,8 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Net.Http;
 using System.Threading.Tasks;
+using MELE_launcher.Utilities;
 
 namespace MELE_launcher.Components
 {
@@ -45,24 +45,12 @@ namespace MELE_launcher.Components
                 // Create rad tools directory
                 Directory.CreateDirectory(RadToolsDirectory);
 
-                // Download RAD Video Tools 7z file
-                using var httpClient = new HttpClient();
-                httpClient.Timeout = TimeSpan.FromMinutes(5); // 5 minute timeout
-
-                // Add user agent to avoid blocking
-                httpClient.DefaultRequestHeaders.Add("User-Agent", 
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
-
-                var response = await httpClient.GetAsync(RAD_TOOLS_URL);
-                response.EnsureSuccessStatusCode();
-
+                // Download RAD Video Tools 7z file (with browser user agent to avoid blocking)
                 var sevenZipPath = Path.Combine(RadToolsDirectory, "RADTools.7z");
-                
-                // Download to file
-                using (var fileStream = File.Create(sevenZipPath))
-                {
-                    await response.Content.CopyToAsync(fileStream);
-                }
+                await FileDownloader.DownloadToFileAsync(
+                    RAD_TOOLS_URL,
+                    sevenZipPath,
+                    userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
 
                 Console.WriteLine("📦 Extracting RAD Tools (password protected)...");
 
@@ -187,32 +175,7 @@ namespace MELE_launcher.Components
         /// <returns>Path to binkplay.exe if found, null otherwise.</returns>
         private string GetInstalledBinkPlayerPath()
         {
-            // Check the default installation path first (as provided by user)
-            var defaultPath = @"C:\Program Files (x86)\RADVideo\binkplay.exe";
-            if (File.Exists(defaultPath))
-            {
-                return defaultPath;
-            }
-
-            // Check other common installation paths
-            var possiblePaths = new[]
-            {
-                @"C:\Program Files\RADVideo\binkplay.exe",
-                @"C:\Program Files (x86)\RAD Game Tools\binkplay.exe",
-                @"C:\Program Files\RAD Game Tools\binkplay.exe",
-                @"C:\Program Files (x86)\RADGameTools\binkplay.exe",
-                @"C:\Program Files\RADGameTools\binkplay.exe"
-            };
-
-            foreach (var path in possiblePaths)
-            {
-                if (File.Exists(path))
-                {
-                    return path;
-                }
-            }
-
-            return null;
+            return RadToolsLocator.FindInstalledFile("binkplay.exe");
         }
 
         /// <summary>
@@ -234,21 +197,12 @@ namespace MELE_launcher.Components
                 {
                     if (File.Exists(sevenZipExe) || sevenZipExe == "7z.exe")
                     {
-                        var startInfo = new ProcessStartInfo
+                        var result = await ProcessRunner.RunAsync(
+                            sevenZipExe,
+                            $"x \"{sevenZipPath}\" -o\"{extractPath}\" -p{password} -y");
+                        if (result.Started)
                         {
-                            FileName = sevenZipExe,
-                            Arguments = $"x \"{sevenZipPath}\" -o\"{extractPath}\" -p{password} -y",
-                            UseShellExecute = false,
-                            CreateNoWindow = true,
-                            RedirectStandardOutput = true,
-                            RedirectStandardError = true
-                        };
-
-                        using var process = Process.Start(startInfo);
-                        if (process != null)
-                        {
-                            await process.WaitForExitAsync();
-                            return process.ExitCode == 0;
+                            return result.Success;
                         }
                     }
                 }
@@ -320,21 +274,13 @@ namespace MELE_launcher.Components
                 Console.WriteLine("📦 Downloading 7-Zip standalone extractor...");
                 
                 var sevenZaPath = Path.Combine(RadToolsDirectory, "7za.exe");
-                
-                // Download 7za.exe from official 7-Zip site
-                using var httpClient = new HttpClient();
-                httpClient.Timeout = TimeSpan.FromMinutes(2);
-                
-                // 7za.exe is the standalone console version of 7-Zip
-                var response = await httpClient.GetAsync("https://www.7-zip.org/a/7za920.zip");
-                response.EnsureSuccessStatusCode();
 
+                // 7za.exe is the standalone console version of 7-Zip
                 var tempZipPath = Path.Combine(RadToolsDirectory, "7za.zip");
-                
-                using (var fileStream = File.Create(tempZipPath))
-                {
-                    await response.Content.CopyToAsync(fileStream);
-                }
+                await FileDownloader.DownloadToFileAsync(
+                    "https://www.7-zip.org/a/7za920.zip",
+                    tempZipPath,
+                    timeout: TimeSpan.FromMinutes(2));
 
                 // Extract 7za.exe from the zip
                 using (var archive = System.IO.Compression.ZipFile.OpenRead(tempZipPath))
@@ -358,21 +304,12 @@ namespace MELE_launcher.Components
                 Console.WriteLine("🔧 Using 7za.exe to extract RAD Tools...");
 
                 // Use 7za.exe to extract the password-protected archive
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = sevenZaPath,
-                    Arguments = $"x \"{sevenZipPath}\" -o\"{extractPath}\" -p{password} -y",
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                };
+                var result = await ProcessRunner.RunAsync(
+                    sevenZaPath,
+                    $"x \"{sevenZipPath}\" -o\"{extractPath}\" -p{password} -y");
 
-                using var process = Process.Start(startInfo);
-                if (process != null)
+                if (result.Started)
                 {
-                    await process.WaitForExitAsync();
-                    
                     // Clean up 7za.exe after use
                     try
                     {
@@ -382,8 +319,8 @@ namespace MELE_launcher.Components
                     {
                         // Ignore cleanup errors
                     }
-                    
-                    return process.ExitCode == 0;
+
+                    return result.Success;
                 }
 
                 return false;

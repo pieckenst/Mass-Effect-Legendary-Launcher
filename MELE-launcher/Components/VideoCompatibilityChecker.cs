@@ -1,9 +1,9 @@
 using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
+using MELE_launcher.Utilities;
 
 namespace MELE_launcher.Components
 {
@@ -50,35 +50,24 @@ namespace MELE_launcher.Components
                 }
 
                 // Use ffprobe to get video information in JSON format
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = ffprobePath,
-                    Arguments = $"-v quiet -print_format json -show_format -show_streams \"{videoPath}\"",
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                };
+                var result = await ProcessRunner.RunAsync(
+                    ffprobePath,
+                    $"-v quiet -print_format json -show_format -show_streams \"{videoPath}\"");
 
-                using var process = Process.Start(startInfo);
-                if (process == null)
+                if (!result.Started)
                 {
                     videoInfo.ErrorMessage = "Failed to start ffprobe process";
                     return videoInfo;
                 }
 
-                var output = await process.StandardOutput.ReadToEndAsync();
-                var error = await process.StandardError.ReadToEndAsync();
-                await process.WaitForExitAsync();
-
-                if (process.ExitCode != 0)
+                if (result.ExitCode != 0)
                 {
-                    videoInfo.ErrorMessage = $"ffprobe failed: {error}";
+                    videoInfo.ErrorMessage = $"ffprobe failed: {result.StandardError}";
                     return videoInfo;
                 }
 
                 // Parse JSON output
-                var jsonDoc = JsonDocument.Parse(output);
+                var jsonDoc = JsonDocument.Parse(result.StandardOutput);
                 var root = jsonDoc.RootElement;
 
                 // Find video stream

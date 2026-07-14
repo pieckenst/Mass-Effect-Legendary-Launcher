@@ -1,8 +1,8 @@
 using System;
 using System.IO;
 using System.IO.Compression;
-using System.Net.Http;
 using System.Threading.Tasks;
+using MELE_launcher.Utilities;
 
 namespace MELE_launcher.Components
 {
@@ -36,19 +36,8 @@ namespace MELE_launcher.Components
                 Directory.CreateDirectory(FFmpegDirectory);
 
                 // Download FFmpeg
-                using var httpClient = new HttpClient();
-                httpClient.Timeout = TimeSpan.FromMinutes(5); // 5 minute timeout
-
-                var response = await httpClient.GetAsync(FFMPEG_URL);
-                response.EnsureSuccessStatusCode();
-
                 var zipPath = Path.Combine(FFmpegDirectory, "ffmpeg.zip");
-                
-                // Download to file
-                using (var fileStream = File.Create(zipPath))
-                {
-                    await response.Content.CopyToAsync(fileStream);
-                }
+                await FileDownloader.DownloadToFileAsync(FFMPEG_URL, zipPath);
 
                 Console.WriteLine("📦 Extracting FFmpeg...");
 
