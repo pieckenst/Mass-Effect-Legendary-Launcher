@@ -30,30 +30,72 @@ namespace MELE_launcher.Configuration
         {
             string configPath = GetConfigPath();
 
+            // A missing file is an expected first-run condition, not an error.
+            if (!File.Exists(configPath))
+            {
+                return CreateDefaultConfig();
+            }
+
             try
             {
-                if (File.Exists(configPath))
+                string json = File.ReadAllText(configPath);
+                var config = JsonSerializer.Deserialize<LauncherConfig>(json);
+
+                // If deserialization returns null, the file is present but empty/invalid.
+                if (config == null)
                 {
-                    string json = File.ReadAllText(configPath);
-                    var config = JsonSerializer.Deserialize<LauncherConfig>(json);
-                    
-                    // If deserialization returns null, create default
-                    if (config == null)
-                    {
-                        return CreateDefaultConfig();
-                    }
-
-                    return config;
+                    BackupCorruptConfig(configPath, "configuration file was empty or contained only null");
+                    return CreateDefaultConfig();
                 }
-            }
-            catch (Exception)
-            {
-                // If file is corrupted or any error occurs, create default config
-                // Silently handle the error and return default
-            }
 
-            // File doesn't exist or error occurred, create default
-            return CreateDefaultConfig();
+                return config;
+            }
+            catch (JsonException ex)
+            {
+                // The file exists but is not valid JSON. Preserve it so the user's
+                // data is not silently discarded, and surface the problem.
+                BackupCorruptConfig(configPath, ex.Message);
+                return CreateDefaultConfig();
+            }
+            catch (IOException ex)
+            {
+                // The file could not be read (locked, permissions, etc.). Do not
+                // overwrite it with defaults; report and fall back for this session.
+                Console.Error.WriteLine($"⚠ Could not read configuration file '{configPath}': {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"ConfigManager.Load IO error: {ex}");
+                return CreateDefaultConfig();
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Console.Error.WriteLine($"⚠ Access denied reading configuration file '{configPath}': {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"ConfigManager.Load access error: {ex}");
+                return CreateDefaultConfig();
+            }
+        }
+
+        /// <summary>
+        /// Backs up a corrupt configuration file so the user's data is not lost when
+        /// the launcher falls back to a default configuration.
+        /// </summary>
+        /// <param name="configPath">Path to the corrupt configuration file.</param>
+        /// <param name="reason">Human-readable reason the file was rejected.</param>
+        private void BackupCorruptConfig(string configPath, string reason)
+        {
+            Console.Error.WriteLine($"⚠ Configuration file '{configPath}' is corrupt ({reason}). Using defaults.");
+            System.Diagnostics.Debug.WriteLine($"ConfigManager.Load corrupt config: {reason}");
+
+            try
+            {
+                string backupPath = $"{configPath}.corrupt-{DateTime.Now:yyyyMMddHHmmss}.bak";
+                File.Copy(configPath, backupPath, overwrite: true);
+                Console.Error.WriteLine($"  A backup was saved to '{backupPath}'.");
+            }
+            catch (Exception backupEx)
+            {
+                // Backing up is best-effort; report but do not fail loading over it.
+                Console.Error.WriteLine($"  Could not back up the corrupt configuration: {backupEx.Message}");
+                System.Diagnostics.Debug.WriteLine($"ConfigManager.Load backup failed: {backupEx}");
+            }
         }
 
         /// <summary>
@@ -68,14 +110,55 @@ namespace MELE_launcher.Configuration
             }
 
             string configPath = GetConfigPath();
-            
+
             var options = new JsonSerializerOptions
             {
                 WriteIndented = true
             };
 
             string json = JsonSerializer.Serialize(config, options);
-            File.WriteAllText(configPath, json);
+
+            // Write to a temporary file first, then replace the target atomically.
+            // This prevents a partially-written file from corrupting existing
+            // configuration if the process is interrupted mid-write.
+            string tempPath = configPath + ".tmp";
+            try
+            {
+                File.WriteAllText(tempPath, json);
+
+                if (File.Exists(configPath))
+                {
+                    File.Replace(tempPath, configPath, destinationBackupFileName: null);
+                }
+                else
+                {
+                    File.Move(tempPath, configPath);
+                }
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                // Clean up the temp file so we do not leave stray artifacts behind,
+                // then propagate a clear, actionable error to the caller.
+                TryDeleteFile(tempPath);
+                throw new IOException(
+                    $"Failed to save configuration to '{configPath}': {ex.Message}", ex);
+            }
+        }
+
+        private static void TryDeleteFile(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Best-effort cleanup; the original failure is more important.
+                System.Diagnostics.Debug.WriteLine($"ConfigManager could not delete temp file '{path}': {ex.Message}");
+            }
         }
 
         /// <summary>

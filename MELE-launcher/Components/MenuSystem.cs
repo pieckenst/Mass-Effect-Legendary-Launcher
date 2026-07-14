@@ -98,20 +98,43 @@ namespace MassEffectLauncher.Components
             SetLocaleChangedCallback(locale =>
             {
                 _config.DefaultLocale = locale;
-                _configManager.Save(_config);
+                PersistConfig();
             });
 
             SetForceFeedbackChangedCallback(enabled =>
             {
                 _config.DefaultForceFeedback = enabled;
-                _configManager.Save(_config);
+                PersistConfig();
             });
 
             SetSkipIntroChangedCallback(enabled =>
             {
                 _config.DefaultSkipIntro = enabled;
-                _configManager.Save(_config);
+                PersistConfig();
             });
+        }
+
+        /// <summary>
+        /// Persists the current configuration, surfacing any save failure to the user
+        /// instead of letting it bubble up and crash the launcher.
+        /// </summary>
+        /// <returns>True if the configuration was saved successfully.</returns>
+        private bool PersistConfig()
+        {
+            try
+            {
+                _configManager.Save(_config);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"MenuSystem failed to save config: {ex}");
+                ShowMessage(
+                    $"Failed to save settings:\n{ex.Message.EscapeMarkup()}\n\n" +
+                    "Your changes may not persist after closing the launcher.",
+                    MessageType.Error);
+                return false;
+            }
         }
 
         /// <summary>
@@ -269,7 +292,7 @@ namespace MassEffectLauncher.Components
                 }
             }
 
-            _configManager.Save(_config);
+            PersistConfig();
         }
 
         /// <summary>
@@ -304,7 +327,7 @@ namespace MassEffectLauncher.Components
                 existingGame.Path = path;
             }
 
-            _configManager.Save(_config);
+            PersistConfig();
         }
 
         #endregion
@@ -1449,7 +1472,7 @@ private IRenderable RenderCenteredTerminal()
             }
 
             modifier(config);
-            _configManager.Save(_config);
+            PersistConfig();
         }
 
         /// <summary>
