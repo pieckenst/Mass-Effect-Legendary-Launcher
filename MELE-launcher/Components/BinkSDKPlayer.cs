@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Drawing;
@@ -12,6 +13,34 @@ namespace MELE_launcher.Components
     /// </summary>
     public class BinkSDKPlayer : IDisposable
     {
+        /// <summary>
+        /// Forces binkw32.dll to resolve from the validated launcher-directory copy instead of
+        /// the ambient DLL search order (CWD/PATH), mitigating DLL-planting/hijacking attacks.
+        /// </summary>
+        static BinkSDKPlayer()
+        {
+            try
+            {
+                NativeLibrary.SetDllImportResolver(typeof(BinkSDKPlayer).Assembly, (name, assembly, searchPath) =>
+                {
+                    if (string.Equals(name, "binkw32.dll", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var localPath = BinkDLLManager.GetLocalBinkDLLPath();
+                        if (File.Exists(localPath) && NativeLibrary.TryLoad(localPath, out var handle))
+                        {
+                            return handle;
+                        }
+                    }
+
+                    return IntPtr.Zero; // Fall back to default resolution for everything else.
+                });
+            }
+            catch (InvalidOperationException)
+            {
+                // A resolver was already registered for this assembly; nothing to do.
+            }
+        }
+
         #region Bink SDK P/Invoke Declarations
         
         // Bink SDK constants
