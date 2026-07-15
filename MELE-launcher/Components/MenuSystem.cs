@@ -118,13 +118,11 @@ namespace MassEffectLauncher.Components
         /// Persists the current configuration, surfacing any save failure to the user
         /// instead of letting it bubble up and crash the launcher.
         /// </summary>
-        /// <returns>True if the configuration was saved successfully.</returns>
-        private bool PersistConfig()
+        private void PersistConfig()
         {
             try
             {
                 _configManager.Save(_config);
-                return true;
             }
             catch (Exception ex)
             {
@@ -133,7 +131,6 @@ namespace MassEffectLauncher.Components
                     $"Failed to save settings:\n{ex.Message.EscapeMarkup()}\n\n" +
                     "Your changes may not persist after closing the launcher.",
                     MessageType.Error);
-                return false;
             }
         }
 

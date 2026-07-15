@@ -61,16 +61,24 @@ namespace MELE_launcher.Configuration
             {
                 // The file could not be read (locked, permissions, etc.). Do not
                 // overwrite it with defaults; report and fall back for this session.
-                Console.Error.WriteLine($"⚠ Could not read configuration file '{configPath}': {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"ConfigManager.Load IO error: {ex}");
+                LogConfigError($"⚠ Could not read configuration file '{configPath}': {ex.Message}", ex);
                 return CreateDefaultConfig();
             }
             catch (UnauthorizedAccessException ex)
             {
-                Console.Error.WriteLine($"⚠ Access denied reading configuration file '{configPath}': {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"ConfigManager.Load access error: {ex}");
+                LogConfigError($"⚠ Access denied reading configuration file '{configPath}': {ex.Message}", ex);
                 return CreateDefaultConfig();
             }
+        }
+
+        /// <summary>
+        /// Reports a configuration error to the user (stderr) and records full
+        /// exception detail for diagnostics (debug output).
+        /// </summary>
+        private static void LogConfigError(string message, Exception ex = null)
+        {
+            Console.Error.WriteLine(message);
+            System.Diagnostics.Debug.WriteLine(ex != null ? $"{message} Exception: {ex}" : message);
         }
 
         /// <summary>
@@ -81,8 +89,7 @@ namespace MELE_launcher.Configuration
         /// <param name="reason">Human-readable reason the file was rejected.</param>
         private void BackupCorruptConfig(string configPath, string reason)
         {
-            Console.Error.WriteLine($"⚠ Configuration file '{configPath}' is corrupt ({reason}). Using defaults.");
-            System.Diagnostics.Debug.WriteLine($"ConfigManager.Load corrupt config: {reason}");
+            LogConfigError($"⚠ Configuration file '{configPath}' is corrupt ({reason}). Using defaults.");
 
             try
             {
@@ -93,8 +100,7 @@ namespace MELE_launcher.Configuration
             catch (Exception backupEx)
             {
                 // Backing up is best-effort; report but do not fail loading over it.
-                Console.Error.WriteLine($"  Could not back up the corrupt configuration: {backupEx.Message}");
-                System.Diagnostics.Debug.WriteLine($"ConfigManager.Load backup failed: {backupEx}");
+                LogConfigError($"  Could not back up the corrupt configuration: {backupEx.Message}", backupEx);
             }
         }
 
