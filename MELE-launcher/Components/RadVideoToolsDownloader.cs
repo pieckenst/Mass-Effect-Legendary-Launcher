@@ -263,7 +263,8 @@ namespace MELE_launcher.Components
                         using var process = Process.Start(startInfo);
                         if (process != null)
                         {
-                            return result.Success;
+                            await process.WaitForExitAsync();
+                            return process.ExitCode == 0;
                         }
                     }
                 }
@@ -405,8 +406,11 @@ namespace MELE_launcher.Components
                 startInfo.ArgumentList.Add($"-p{password}");
                 startInfo.ArgumentList.Add("-y");
 
-                if (result.Started)
+                using var process = Process.Start(startInfo);
+                if (process != null)
                 {
+                    await process.WaitForExitAsync();
+
                     // Clean up 7za.exe after use
                     try
                     {
@@ -417,7 +421,7 @@ namespace MELE_launcher.Components
                         // Ignore cleanup errors
                     }
 
-                    return result.Success;
+                    return process.ExitCode == 0;
                 }
 
                 return false;

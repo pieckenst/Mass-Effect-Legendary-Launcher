@@ -35,10 +35,6 @@ namespace MELE_launcher.Components
                 // Create ffmpeg directory
                 Directory.CreateDirectory(FFmpegDirectory);
 
-                // Download FFmpeg
-                using var httpClient = new HttpClient();
-                httpClient.Timeout = TimeSpan.FromMinutes(5); // 5 minute timeout
-
                 // Only ever fetch executable payloads over HTTPS.
                 if (!Uri.TryCreate(FFMPEG_URL, UriKind.Absolute, out var ffmpegUri) ||
                     !string.Equals(ffmpegUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
@@ -47,9 +43,7 @@ namespace MELE_launcher.Components
                     return null;
                 }
 
-                var response = await httpClient.GetAsync(FFMPEG_URL);
-                response.EnsureSuccessStatusCode();
-
+                // Download FFmpeg
                 var zipPath = Path.Combine(FFmpegDirectory, "ffmpeg.zip");
                 await FileDownloader.DownloadToFileAsync(FFMPEG_URL, zipPath);
 
