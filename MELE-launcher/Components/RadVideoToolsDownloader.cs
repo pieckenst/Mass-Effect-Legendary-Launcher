@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Net.Http;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using MELE_launcher.Utilities;
@@ -83,17 +82,7 @@ namespace MELE_launcher.Components
                 Directory.CreateDirectory(RadToolsDirectory);
 
                 // Download RAD Video Tools 7z file
-                using var httpClient = new HttpClient();
-                httpClient.Timeout = TimeSpan.FromMinutes(5); // 5 minute timeout
-
-                // Add user agent to avoid blocking
-                httpClient.DefaultRequestHeaders.Add("User-Agent", 
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
-
                 EnsureHttps(RAD_TOOLS_URL);
-                var response = await httpClient.GetAsync(RAD_TOOLS_URL);
-                response.EnsureSuccessStatusCode();
-
                 var sevenZipPath = Path.Combine(RadToolsDirectory, "RADTools.7z");
                 await FileDownloader.DownloadToFileAsync(
                     RAD_TOOLS_URL,
@@ -346,19 +335,11 @@ namespace MELE_launcher.Components
                 
                 var sevenZaPath = Path.Combine(RadToolsDirectory, "7za.exe");
                 
-                // Download 7za.exe from official 7-Zip site
-                using var httpClient = new HttpClient();
-                httpClient.Timeout = TimeSpan.FromMinutes(2);
-                
                 // 7za.exe is the standalone console version of 7-Zip
                 EnsureHttps(SEVENZA_URL);
-                var response = await httpClient.GetAsync(SEVENZA_URL);
-                response.EnsureSuccessStatusCode();
-
-                // 7za.exe is the standalone console version of 7-Zip
                 var tempZipPath = Path.Combine(RadToolsDirectory, "7za.zip");
                 await FileDownloader.DownloadToFileAsync(
-                    "https://www.7-zip.org/a/7za920.zip",
+                    SEVENZA_URL,
                     tempZipPath,
                     timeout: TimeSpan.FromMinutes(2));
 
