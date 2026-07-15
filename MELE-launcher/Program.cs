@@ -452,7 +452,7 @@ namespace MELE_launcher
 					}
 					catch (Exception ex)
 					{
-						System.Diagnostics.Debug.WriteLine($"Failed to save config after pruning invalid paths: {ex}");
+						MELE_launcher.Utilities.LauncherLog.Diagnostic("Program", "Failed to save config after pruning invalid paths", ex);
 						_menuSystem.ShowMessage(
 							$"Could not update the saved configuration:\n{ex.Message.EscapeMarkup()}",
 							MessageType.Warning);
