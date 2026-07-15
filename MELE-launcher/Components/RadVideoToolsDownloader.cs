@@ -5,6 +5,7 @@ using System.IO.Compression;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using MELE_launcher.Utilities;
 
 namespace MELE_launcher.Components
 {
@@ -94,12 +95,10 @@ namespace MELE_launcher.Components
                 response.EnsureSuccessStatusCode();
 
                 var sevenZipPath = Path.Combine(RadToolsDirectory, "RADTools.7z");
-                
-                // Download to file
-                using (var fileStream = File.Create(sevenZipPath))
-                {
-                    await response.Content.CopyToAsync(fileStream);
-                }
+                await FileDownloader.DownloadToFileAsync(
+                    RAD_TOOLS_URL,
+                    sevenZipPath,
+                    userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
 
                 Console.WriteLine("📦 Extracting RAD Tools (password protected)...");
 
@@ -224,32 +223,7 @@ namespace MELE_launcher.Components
         /// <returns>Path to binkplay.exe if found, null otherwise.</returns>
         private string GetInstalledBinkPlayerPath()
         {
-            // Check the default installation path first (as provided by user)
-            var defaultPath = @"C:\Program Files (x86)\RADVideo\binkplay.exe";
-            if (File.Exists(defaultPath))
-            {
-                return defaultPath;
-            }
-
-            // Check other common installation paths
-            var possiblePaths = new[]
-            {
-                @"C:\Program Files\RADVideo\binkplay.exe",
-                @"C:\Program Files (x86)\RAD Game Tools\binkplay.exe",
-                @"C:\Program Files\RAD Game Tools\binkplay.exe",
-                @"C:\Program Files (x86)\RADGameTools\binkplay.exe",
-                @"C:\Program Files\RADGameTools\binkplay.exe"
-            };
-
-            foreach (var path in possiblePaths)
-            {
-                if (File.Exists(path))
-                {
-                    return path;
-                }
-            }
-
-            return null;
+            return RadToolsLocator.FindInstalledFile("binkplay.exe");
         }
 
         /// <summary>
@@ -289,8 +263,7 @@ namespace MELE_launcher.Components
                         using var process = Process.Start(startInfo);
                         if (process != null)
                         {
-                            await process.WaitForExitAsync();
-                            return process.ExitCode == 0;
+                            return result.Success;
                         }
                     }
                 }
@@ -381,12 +354,12 @@ namespace MELE_launcher.Components
                 var response = await httpClient.GetAsync(SEVENZA_URL);
                 response.EnsureSuccessStatusCode();
 
+                // 7za.exe is the standalone console version of 7-Zip
                 var tempZipPath = Path.Combine(RadToolsDirectory, "7za.zip");
-                
-                using (var fileStream = File.Create(tempZipPath))
-                {
-                    await response.Content.CopyToAsync(fileStream);
-                }
+                await FileDownloader.DownloadToFileAsync(
+                    "https://www.7-zip.org/a/7za920.zip",
+                    tempZipPath,
+                    timeout: TimeSpan.FromMinutes(2));
 
                 // Reject a tampered/MITM'd archive before extracting and executing 7za.exe.
                 if (!VerifyFileHash(tempZipPath, SEVENZA_SHA256))
@@ -432,11 +405,8 @@ namespace MELE_launcher.Components
                 startInfo.ArgumentList.Add($"-p{password}");
                 startInfo.ArgumentList.Add("-y");
 
-                using var process = Process.Start(startInfo);
-                if (process != null)
+                if (result.Started)
                 {
-                    await process.WaitForExitAsync();
-                    
                     // Clean up 7za.exe after use
                     try
                     {
@@ -446,8 +416,8 @@ namespace MELE_launcher.Components
                     {
                         // Ignore cleanup errors
                     }
-                    
-                    return process.ExitCode == 0;
+
+                    return result.Success;
                 }
 
                 return false;

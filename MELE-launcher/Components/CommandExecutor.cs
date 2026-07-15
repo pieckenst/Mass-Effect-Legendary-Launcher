@@ -371,18 +371,5 @@ namespace MELE_launcher.Components
             });
         }
 
-        private class Theme
-        {
-            public Color Primary = Color.White;
-            public Color Secondary = Color.SlateBlue1;
-            public Color Accent = Color.Cyan1;
-            public Color Muted = Color.Grey39;
-            public Color Highlight = Color.Cyan1;
-            public Color Alert = Color.Orange1;
-            
-            public string SecondaryName = "slateBlue1";
-            public string AccentName = "cyan1";
-            public string HighlightName = "cyan1";
-        }
     }
 }
