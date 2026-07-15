@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <RootNamespace>MELE_launcher.Tests</RootNamespace>
+    <AssemblyName>MELE-launcher.Tests</AssemblyName>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="xunit" Version="2.6.6" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.6">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector" Version="6.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Spectre.Console" Version="0.49.1" />
+  </ItemGroup>
+
+  <!--
+    The main MELE-launcher project targets net6.0-windows with WindowsForms and
+    therefore cannot be executed on non-Windows CI. To keep these unit tests
+    cross-platform, the pure-logic source files under test are compiled directly
+    into this test assembly via linked <Compile> items rather than a ProjectReference.
+  -->
+  <ItemGroup>
+    <Compile Include="..\MELE-launcher\Models\*.cs" LinkBase="Linked\Models" />
+    <Compile Include="..\MELE-launcher\Configuration\ConfigManager.cs" LinkBase="Linked\Configuration" />
+    <Compile Include="..\MELE-launcher\Components\CommandExecutor.cs" LinkBase="Linked\Components" />
+  </ItemGroup>
+
+</Project>

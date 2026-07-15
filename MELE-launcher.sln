@@ -5,7 +5,8 @@ VisualStudioVersion = 17.0.31423.177
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MELE-launcher", "MELE-launcher\MELE-launcher.csproj", "{298E6350-01F4-4898-ACD3-05FF12F1821C}"
 EndProject
-
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MELE-launcher.Tests", "MELE-launcher.Tests\MELE-launcher.Tests.csproj", "{512C2685-1110-41A5-BCFF-8A4997486ABA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +21,10 @@ Global
 		{BA2B0486-793C-4FD2-8E20-C84E5D1AA785}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BA2B0486-793C-4FD2-8E20-C84E5D1AA785}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BA2B0486-793C-4FD2-8E20-C84E5D1AA785}.Release|Any CPU.Build.0 = Release|Any CPU
+		{512C2685-1110-41A5-BCFF-8A4997486ABA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{512C2685-1110-41A5-BCFF-8A4997486ABA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{512C2685-1110-41A5-BCFF-8A4997486ABA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{512C2685-1110-41A5-BCFF-8A4997486ABA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

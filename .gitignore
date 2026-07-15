@@ -395,3 +395,5 @@ bink2w32.dll
 
 # Downloaded video tools
 VideoTools/
+# Test coverage results
+[Tt]est[Rr]esults/
