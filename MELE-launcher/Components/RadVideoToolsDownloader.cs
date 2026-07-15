@@ -3,7 +3,9 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
+using MELE_launcher.Utilities;
 
 namespace MELE_launcher.Components
 {
@@ -13,10 +15,45 @@ namespace MELE_launcher.Components
     public class RadVideoToolsDownloader
     {
         private const string RAD_TOOLS_URL = "https://www.radgametools.com/down/Bink/RADTools.7z";
+        // NOTE: This is the public archive password published by RAD Game Tools, not a secret.
         private const string RAD_TOOLS_PASSWORD = "RAD";
+        private const string SEVENZA_URL = "https://www.7-zip.org/a/7za920.zip";
+        // Pinned SHA-256 of 7za920.zip so a tampered/MITM'd download is never executed.
+        private const string SEVENZA_SHA256 = "2a3afe19c180f8373fa02ff00254d5394fec0349f5804e0ad2f6067854ff28ac";
         private static readonly string RadToolsDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "radtools");
         private static readonly string BinkPlayerExecutable = Path.Combine(RadToolsDirectory, "BinkPlay.exe");
         private static readonly string RadToolsInstaller = Path.Combine(RadToolsDirectory, "radtools.exe");
+
+        /// <summary>
+        /// Ensures a download URL uses HTTPS before it is requested, preventing accidental
+        /// plaintext (downgradeable / MITM-able) retrieval of executable payloads.
+        /// </summary>
+        private static void EnsureHttps(string url)
+        {
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) ||
+                !string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException($"Refusing to download from non-HTTPS URL: {url}");
+            }
+        }
+
+        /// <summary>
+        /// Verifies that a file matches an expected SHA-256 hash.
+        /// </summary>
+        private static bool VerifyFileHash(string filePath, string expectedSha256)
+        {
+            try
+            {
+                using var stream = File.OpenRead(filePath);
+                using var sha = SHA256.Create();
+                var hash = Convert.ToHexString(sha.ComputeHash(stream));
+                return string.Equals(hash, expectedSha256, StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return false;
+            }
+        }
 
         /// <summary>
         /// Gets the path to the Bink player executable, checking installed version first, then downloading if necessary.
@@ -53,16 +90,15 @@ namespace MELE_launcher.Components
                 httpClient.DefaultRequestHeaders.Add("User-Agent", 
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
 
+                EnsureHttps(RAD_TOOLS_URL);
                 var response = await httpClient.GetAsync(RAD_TOOLS_URL);
                 response.EnsureSuccessStatusCode();
 
                 var sevenZipPath = Path.Combine(RadToolsDirectory, "RADTools.7z");
-                
-                // Download to file
-                using (var fileStream = File.Create(sevenZipPath))
-                {
-                    await response.Content.CopyToAsync(fileStream);
-                }
+                await FileDownloader.DownloadToFileAsync(
+                    RAD_TOOLS_URL,
+                    sevenZipPath,
+                    userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
 
                 Console.WriteLine("📦 Extracting RAD Tools (password protected)...");
 
@@ -187,32 +223,7 @@ namespace MELE_launcher.Components
         /// <returns>Path to binkplay.exe if found, null otherwise.</returns>
         private string GetInstalledBinkPlayerPath()
         {
-            // Check the default installation path first (as provided by user)
-            var defaultPath = @"C:\Program Files (x86)\RADVideo\binkplay.exe";
-            if (File.Exists(defaultPath))
-            {
-                return defaultPath;
-            }
-
-            // Check other common installation paths
-            var possiblePaths = new[]
-            {
-                @"C:\Program Files\RADVideo\binkplay.exe",
-                @"C:\Program Files (x86)\RAD Game Tools\binkplay.exe",
-                @"C:\Program Files\RAD Game Tools\binkplay.exe",
-                @"C:\Program Files (x86)\RADGameTools\binkplay.exe",
-                @"C:\Program Files\RADGameTools\binkplay.exe"
-            };
-
-            foreach (var path in possiblePaths)
-            {
-                if (File.Exists(path))
-                {
-                    return path;
-                }
-            }
-
-            return null;
+            return RadToolsLocator.FindInstalledFile("binkplay.exe");
         }
 
         /// <summary>
@@ -237,18 +248,22 @@ namespace MELE_launcher.Components
                         var startInfo = new ProcessStartInfo
                         {
                             FileName = sevenZipExe,
-                            Arguments = $"x \"{sevenZipPath}\" -o\"{extractPath}\" -p{password} -y",
                             UseShellExecute = false,
                             CreateNoWindow = true,
                             RedirectStandardOutput = true,
                             RedirectStandardError = true
                         };
+                        // Pass each token separately so paths/password are never re-parsed by a shell.
+                        startInfo.ArgumentList.Add("x");
+                        startInfo.ArgumentList.Add(sevenZipPath);
+                        startInfo.ArgumentList.Add($"-o{extractPath}");
+                        startInfo.ArgumentList.Add($"-p{password}");
+                        startInfo.ArgumentList.Add("-y");
 
                         using var process = Process.Start(startInfo);
                         if (process != null)
                         {
-                            await process.WaitForExitAsync();
-                            return process.ExitCode == 0;
+                            return result.Success;
                         }
                     }
                 }
@@ -268,11 +283,15 @@ namespace MELE_launcher.Components
         {
             try
             {
+                // Escape single quotes so a path containing them cannot break out of the
+                // PowerShell string literals and inject arbitrary commands.
+                string EscapePs(string value) => value.Replace("'", "''");
+
                 // First try with 7-Zip4PowerShell module if available
                 var psScript7Zip = $@"
                     try {{
                         Import-Module 7Zip4PowerShell -ErrorAction Stop
-                        Expand-7Zip -ArchiveFileName '{sevenZipPath}' -TargetPath '{extractPath}' -Password '{password}'
+                        Expand-7Zip -ArchiveFileName '{EscapePs(sevenZipPath)}' -TargetPath '{EscapePs(extractPath)}' -Password '{EscapePs(password)}'
                         Write-Host 'Extraction successful with 7Zip4PowerShell'
                         exit 0
                     }} catch {{
@@ -284,12 +303,17 @@ namespace MELE_launcher.Components
                 var startInfo = new ProcessStartInfo
                 {
                     FileName = "powershell.exe",
-                    Arguments = $"-NoProfile -ExecutionPolicy Bypass -Command \"{psScript7Zip}\"",
                     UseShellExecute = false,
                     CreateNoWindow = true,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true
                 };
+                // Use ArgumentList so the script is passed as a single, un-reparsed argument.
+                startInfo.ArgumentList.Add("-NoProfile");
+                startInfo.ArgumentList.Add("-ExecutionPolicy");
+                startInfo.ArgumentList.Add("Bypass");
+                startInfo.ArgumentList.Add("-Command");
+                startInfo.ArgumentList.Add(psScript7Zip);
 
                 using var process = Process.Start(startInfo);
                 if (process != null)
@@ -326,14 +350,23 @@ namespace MELE_launcher.Components
                 httpClient.Timeout = TimeSpan.FromMinutes(2);
                 
                 // 7za.exe is the standalone console version of 7-Zip
-                var response = await httpClient.GetAsync("https://www.7-zip.org/a/7za920.zip");
+                EnsureHttps(SEVENZA_URL);
+                var response = await httpClient.GetAsync(SEVENZA_URL);
                 response.EnsureSuccessStatusCode();
 
+                // 7za.exe is the standalone console version of 7-Zip
                 var tempZipPath = Path.Combine(RadToolsDirectory, "7za.zip");
-                
-                using (var fileStream = File.Create(tempZipPath))
+                await FileDownloader.DownloadToFileAsync(
+                    "https://www.7-zip.org/a/7za920.zip",
+                    tempZipPath,
+                    timeout: TimeSpan.FromMinutes(2));
+
+                // Reject a tampered/MITM'd archive before extracting and executing 7za.exe.
+                if (!VerifyFileHash(tempZipPath, SEVENZA_SHA256))
                 {
-                    await response.Content.CopyToAsync(fileStream);
+                    Console.WriteLine("❌ 7za download failed integrity check (unexpected SHA-256). Aborting.");
+                    try { File.Delete(tempZipPath); } catch { /* ignore cleanup errors */ }
+                    return false;
                 }
 
                 // Extract 7za.exe from the zip
@@ -361,18 +394,19 @@ namespace MELE_launcher.Components
                 var startInfo = new ProcessStartInfo
                 {
                     FileName = sevenZaPath,
-                    Arguments = $"x \"{sevenZipPath}\" -o\"{extractPath}\" -p{password} -y",
                     UseShellExecute = false,
                     CreateNoWindow = true,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true
                 };
+                startInfo.ArgumentList.Add("x");
+                startInfo.ArgumentList.Add(sevenZipPath);
+                startInfo.ArgumentList.Add($"-o{extractPath}");
+                startInfo.ArgumentList.Add($"-p{password}");
+                startInfo.ArgumentList.Add("-y");
 
-                using var process = Process.Start(startInfo);
-                if (process != null)
+                if (result.Started)
                 {
-                    await process.WaitForExitAsync();
-                    
                     // Clean up 7za.exe after use
                     try
                     {
@@ -382,8 +416,8 @@ namespace MELE_launcher.Components
                     {
                         // Ignore cleanup errors
                     }
-                    
-                    return process.ExitCode == 0;
+
+                    return result.Success;
                 }
 
                 return false;

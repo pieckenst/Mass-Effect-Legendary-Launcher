@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using MELE_launcher.Utilities;
 
 namespace MELE_launcher.Components
 {
@@ -150,17 +150,7 @@ namespace MELE_launcher.Components
         /// <returns>Path to binkw32.dll if found, null otherwise.</returns>
         private static string FindBinkDLLInRADTools()
         {
-            var radToolsPaths = new[]
-            {
-                @"C:\Program Files (x86)\RADVideo\binkw32.dll",
-                @"C:\Program Files\RADVideo\binkw32.dll",
-                @"C:\Program Files (x86)\RAD Game Tools\binkw32.dll",
-                @"C:\Program Files\RAD Game Tools\binkw32.dll",
-                @"C:\Program Files (x86)\RADGameTools\binkw32.dll",
-                @"C:\Program Files\RADGameTools\binkw32.dll"
-            };
-
-            return radToolsPaths.FirstOrDefault(File.Exists);
+            return RadToolsLocator.FindInstalledFile("binkw32.dll");
         }
 
         /// <summary>

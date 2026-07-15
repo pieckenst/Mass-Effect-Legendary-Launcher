@@ -1,8 +1,8 @@
 using System;
 using System.IO;
 using System.IO.Compression;
-using System.Net.Http;
 using System.Threading.Tasks;
+using MELE_launcher.Utilities;
 
 namespace MELE_launcher.Components
 {
@@ -39,16 +39,19 @@ namespace MELE_launcher.Components
                 using var httpClient = new HttpClient();
                 httpClient.Timeout = TimeSpan.FromMinutes(5); // 5 minute timeout
 
+                // Only ever fetch executable payloads over HTTPS.
+                if (!Uri.TryCreate(FFMPEG_URL, UriKind.Absolute, out var ffmpegUri) ||
+                    !string.Equals(ffmpegUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine("❌ Refusing to download FFmpeg from a non-HTTPS URL.");
+                    return null;
+                }
+
                 var response = await httpClient.GetAsync(FFMPEG_URL);
                 response.EnsureSuccessStatusCode();
 
                 var zipPath = Path.Combine(FFmpegDirectory, "ffmpeg.zip");
-                
-                // Download to file
-                using (var fileStream = File.Create(zipPath))
-                {
-                    await response.Content.CopyToAsync(fileStream);
-                }
+                await FileDownloader.DownloadToFileAsync(FFMPEG_URL, zipPath);
 
                 Console.WriteLine("📦 Extracting FFmpeg...");
 
