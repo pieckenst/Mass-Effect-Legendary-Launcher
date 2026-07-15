@@ -31,6 +31,7 @@
   -->
   <ItemGroup>
     <Compile Include="..\MELE-launcher\Models\*.cs" LinkBase="Linked\Models" />
+    <Compile Include="..\MELE-launcher\Utilities\LauncherLog.cs" LinkBase="Linked\Utilities" />
     <Compile Include="..\MELE-launcher\Configuration\ConfigManager.cs" LinkBase="Linked\Configuration" />
     <Compile Include="..\MELE-launcher\Components\CommandExecutor.cs" LinkBase="Linked\Components" />
   </ItemGroup>

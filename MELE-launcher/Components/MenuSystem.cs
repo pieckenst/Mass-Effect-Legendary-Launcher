@@ -126,7 +126,7 @@ namespace MassEffectLauncher.Components
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"MenuSystem failed to save config: {ex}");
+                MELE_launcher.Utilities.LauncherLog.Diagnostic(nameof(MenuSystem), "Failed to save config", ex);
                 ShowMessage(
                     $"Failed to save settings:\n{ex.Message.EscapeMarkup()}\n\n" +
                     "Your changes may not persist after closing the launcher.",

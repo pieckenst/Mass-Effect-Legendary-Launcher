@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 using MELE_launcher.Models;
+using MELE_launcher.Utilities;
 
 namespace MELE_launcher.Configuration
 {
@@ -11,6 +12,33 @@ namespace MELE_launcher.Configuration
     public class ConfigManager
     {
         private const string ConfigFileName = "launcher-config.json";
+        private const string AppDataFolderName = "MELE-Launcher";
+
+        private readonly string _configDirectory;
+
+        /// <summary>
+        /// Initializes a new instance that stores configuration in the current user's
+        /// application-data directory. This keeps the file writable even when the
+        /// launcher itself is installed in a read-only location such as Program Files.
+        /// </summary>
+        public ConfigManager() : this(null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance, optionally overriding the directory the
+        /// configuration file is stored in (primarily for testing).
+        /// </summary>
+        /// <param name="configDirectoryOverride">
+        /// Directory to store the configuration in, or <c>null</c> to use the
+        /// per-user application-data directory.
+        /// </param>
+        public ConfigManager(string configDirectoryOverride)
+        {
+            _configDirectory = string.IsNullOrWhiteSpace(configDirectoryOverride)
+                ? ResolveDefaultConfigDirectory()
+                : configDirectoryOverride;
+        }
 
         /// <summary>
         /// Gets the full path to the configuration file.
@@ -18,7 +46,75 @@ namespace MELE_launcher.Configuration
         /// <returns>The absolute path to the configuration file.</returns>
         public string GetConfigPath()
         {
-            return Path.Combine(Directory.GetCurrentDirectory(), ConfigFileName);
+            return Path.Combine(_configDirectory, ConfigFileName);
+        }
+
+        /// <summary>
+        /// Resolves the per-user application-data directory for the launcher,
+        /// creating it if necessary. Falls back to the current directory only if
+        /// the application-data location cannot be resolved or created.
+        /// </summary>
+        private static string ResolveDefaultConfigDirectory()
+        {
+            try
+            {
+                string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+
+                if (string.IsNullOrEmpty(appData))
+                {
+                    return Directory.GetCurrentDirectory();
+                }
+
+                string directory = Path.Combine(appData, AppDataFolderName);
+                Directory.CreateDirectory(directory);
+                return directory;
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                // If we cannot use the application-data directory, fall back to the
+                // working directory rather than failing to construct the manager.
+                LauncherLog.Warning(
+                    nameof(ConfigManager),
+                    $"\u26a0 Could not use the application-data directory for configuration: {ex.Message}",
+                    ex);
+                return Directory.GetCurrentDirectory();
+            }
+        }
+
+        /// <summary>
+        /// Migrates a configuration file from the legacy location (next to the
+        /// executable / current working directory) into the application-data
+        /// directory the first time the launcher runs after the move. Best-effort:
+        /// any failure leaves the legacy file untouched and falls through to normal
+        /// first-run behaviour.
+        /// </summary>
+        private void MigrateLegacyConfigIfNeeded(string configPath)
+        {
+            try
+            {
+                string legacyPath = Path.Combine(Directory.GetCurrentDirectory(), ConfigFileName);
+
+                // Nothing to migrate if the legacy file is absent, the new file
+                // already exists, or the legacy file *is* the new file.
+                if (File.Exists(configPath) ||
+                    !File.Exists(legacyPath) ||
+                    string.Equals(Path.GetFullPath(legacyPath), Path.GetFullPath(configPath), StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+
+                File.Copy(legacyPath, configPath, overwrite: false);
+                LauncherLog.Diagnostic(
+                    nameof(ConfigManager),
+                    $"Migrated configuration from legacy location '{legacyPath}' to '{configPath}'.");
+            }
+            catch (Exception ex)
+            {
+                LauncherLog.Diagnostic(
+                    nameof(ConfigManager),
+                    $"Could not migrate legacy configuration file: {ex.Message}",
+                    ex);
+            }
         }
 
         /// <summary>
@@ -29,6 +125,8 @@ namespace MELE_launcher.Configuration
         public LauncherConfig Load()
         {
             string configPath = GetConfigPath();
+
+            MigrateLegacyConfigIfNeeded(configPath);
 
             // A missing file is an expected first-run condition, not an error.
             if (!File.Exists(configPath))
@@ -77,8 +175,7 @@ namespace MELE_launcher.Configuration
         /// </summary>
         private static void LogConfigError(string message, Exception ex = null)
         {
-            Console.Error.WriteLine(message);
-            System.Diagnostics.Debug.WriteLine(ex != null ? $"{message} Exception: {ex}" : message);
+            LauncherLog.Error(nameof(ConfigManager), message, ex);
         }
 
         /// <summary>
@@ -95,7 +192,7 @@ namespace MELE_launcher.Configuration
             {
                 string backupPath = $"{configPath}.corrupt-{DateTime.Now:yyyyMMddHHmmss}.bak";
                 File.Copy(configPath, backupPath, overwrite: true);
-                Console.Error.WriteLine($"  A backup was saved to '{backupPath}'.");
+                LauncherLog.Warning(nameof(ConfigManager), $"  A backup was saved to '{backupPath}'.");
             }
             catch (Exception backupEx)
             {
@@ -163,7 +260,7 @@ namespace MELE_launcher.Configuration
             catch (Exception ex)
             {
                 // Best-effort cleanup; the original failure is more important.
-                System.Diagnostics.Debug.WriteLine($"ConfigManager could not delete temp file '{path}': {ex.Message}");
+                LauncherLog.Diagnostic(nameof(ConfigManager), $"Could not delete temp file '{path}': {ex.Message}", ex);
             }
         }
 
